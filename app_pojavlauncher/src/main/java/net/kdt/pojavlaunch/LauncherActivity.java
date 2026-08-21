@@ -177,12 +177,20 @@ public class LauncherActivity extends BaseActivity {
         }
 
         String selectedProfile = LauncherPreferences.DEFAULT_PREF.getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE,"");
+        if (LauncherProfiles.mainProfileJson == null) LauncherProfiles.load();
         if (LauncherProfiles.mainProfileJson == null || !LauncherProfiles.mainProfileJson.profiles.containsKey(selectedProfile)){
-            Toast.makeText(this, R.string.error_no_version, Toast.LENGTH_LONG).show();
-            return false;
+            if(LauncherProfiles.mainProfileJson != null && LauncherProfiles.mainProfileJson.profiles.containsKey("MicroClient")) {
+                selectedProfile = "MicroClient";
+                LauncherPreferences.DEFAULT_PREF.edit().putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, selectedProfile).apply();
+            } else {
+                android.util.Log.e("MicroClient", "No version! mainProfileJson is " + (LauncherProfiles.mainProfileJson == null ? "null" : "not null, but MicroClient profile missing. Keys: " + LauncherProfiles.mainProfileJson.profiles.keySet().toString()));
+                Toast.makeText(this, R.string.error_no_version, Toast.LENGTH_LONG).show();
+                return false;
+            }
         }
         MinecraftProfile prof = LauncherProfiles.mainProfileJson.profiles.get(selectedProfile);
         if (prof == null || prof.lastVersionId == null || "Unknown".equals(prof.lastVersionId)){
+            android.util.Log.e("MicroClient", "No version! prof is " + (prof == null ? "null" : "not null. lastVersionId: " + prof.lastVersionId));
             Toast.makeText(this, R.string.error_no_version, Toast.LENGTH_LONG).show();
             return false;
         }

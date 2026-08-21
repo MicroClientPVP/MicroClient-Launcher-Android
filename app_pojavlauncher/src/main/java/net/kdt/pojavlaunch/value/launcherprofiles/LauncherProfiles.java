@@ -33,7 +33,7 @@ public class LauncherProfiles {
         if (mainProfileJson == null) mainProfileJson = new MinecraftLauncherProfiles();
         if (mainProfileJson.profiles == null) mainProfileJson.profiles = new HashMap<>();
         if (mainProfileJson.profiles.size() == 0)
-            mainProfileJson.profiles.put(UUID.randomUUID().toString(), MinecraftProfile.getDefaultProfile());
+            mainProfileJson.profiles.put("MicroClient", MinecraftProfile.getDefaultProfile());
 
         // Normalize profile names from mod installers
         if(normalizeProfileIds(mainProfileJson)){
@@ -53,10 +53,9 @@ public class LauncherProfiles {
     }
 
     public static @NonNull MinecraftProfile getCurrentProfile() {
-        if(mainProfileJson == null) LauncherProfiles.load();
-        String defaultProfileName = LauncherPreferences.DEFAULT_PREF.getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, "");
-        MinecraftProfile profile = mainProfileJson.profiles.get(defaultProfileName);
-        if(profile == null) throw new RuntimeException("The current profile stopped existing :(");
+        MinecraftProfile profile = new MinecraftProfile();
+        profile.name = "MicroClient";
+        profile.lastVersionId = "MicroClient";
         return profile;
     }
 
@@ -90,6 +89,7 @@ public class LauncherProfiles {
 
         // Detect denormalized keys
         for(String profileKey : launcherProfiles.profiles.keySet()){
+            if ("MicroClient".equals(profileKey)) continue;
             try{
                 if(!UUID.fromString(profileKey).toString().equals(profileKey)) keys.add(profileKey);
             }catch (IllegalArgumentException exception){

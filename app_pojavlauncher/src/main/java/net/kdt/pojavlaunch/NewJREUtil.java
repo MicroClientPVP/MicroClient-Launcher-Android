@@ -79,10 +79,10 @@ public class NewJREUtil {
     /** @return true if everything is good, false otherwise.  */
     public static boolean installNewJreIfNeeded(Activity activity, JMinecraftVersionList.Version versionInfo) {
         //Now we have the reliable information to check if our runtime settings are good enough
-        if (versionInfo.javaVersion == null || versionInfo.javaVersion.component.equalsIgnoreCase("jre-legacy"))
-            return true;
-
-        int gameRequiredVersion = versionInfo.javaVersion.majorVersion;
+        int gameRequiredVersion = 8;
+        if (versionInfo.javaVersion != null && !versionInfo.javaVersion.component.equalsIgnoreCase("jre-legacy")) {
+            gameRequiredVersion = versionInfo.javaVersion.majorVersion;
+        }
 
         LauncherProfiles.load();
         AssetManager assetManager = activity.getAssets();

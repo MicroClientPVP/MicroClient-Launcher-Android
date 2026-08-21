@@ -100,7 +100,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "org.angelauramc.amethyst"
+        applicationId "party.komas19.microclientandroid"
         minSdkVersion 21
         targetSdkVersion 34
         versionCode 10000000
@@ -122,11 +122,11 @@ android {
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.customDebug
-            resValue "string", "app_name", "Amethyst (Debug)"
-            resValue "string", "app_short_name", "Amethyst (Debug)"
-            resValue 'string', 'application_package', 'org.angelauramc.amethyst.debug'
-            resValue 'string', 'storageProviderAuthorities', 'org.angelauramc.amethyst.scoped.gamefolder.debug'
-            resValue 'string', 'shareProviderAuthority', 'org.angelauramc.amethyst.scoped.controlfolder.debug'
+            resValue "string", "app_name", "Micro Client (Debug)"
+            resValue "string", "app_short_name", "Micro Client (Debug)"
+            resValue 'string', 'application_package', 'party.komas19.microclientandroid.debug'
+            resValue 'string', 'storageProviderAuthorities', 'party.komas19.microclientandroid.scoped.gamefolder.debug'
+            resValue 'string', 'shareProviderAuthority', 'party.komas19.microclientandroid.scoped.controlfolder.debug'
         }
         proguard {
             initWith debug
@@ -146,10 +146,10 @@ android {
             // defaultConfig already set
             // multiDexEnabled = true
             // debuggable = true
-            resValue "string", "app_name", "Amethyst"
-            resValue "string", "app_short_name", "Amethyst"
-            resValue 'string', 'storageProviderAuthorities', 'org.angelauramc.amethyst.scoped.gamefolder'
-            resValue 'string', 'application_package', 'org.angelauramc.amethyst'
+            resValue "string", "app_name", "Micro Client"
+            resValue "string", "app_short_name", "Micro Client"
+            resValue 'string', 'storageProviderAuthorities', 'party.komas19.microclientandroid.scoped.gamefolder'
+            resValue 'string', 'application_package', 'party.komas19.microclientandroid'
         }
         gplay {
             initWith release
@@ -197,9 +197,6 @@ android {
 
 afterEvaluate {
     def componentJars = [
-            ":forge_installer:jar",
-            ":arc_dns_injector:jar",
-            ":MioLibPatcher:jar",
             ":jre_lwjgl3glfw:jar"
     ]
 

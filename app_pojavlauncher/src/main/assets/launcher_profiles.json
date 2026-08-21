@@ -1,9 +1,9 @@
 {
   "profiles": {
-    "(Default)": {
-      "name": "(Default)",
-      "lastVersionId": "1.7.10"
+    "MicroClient": {
+      "name": "MicroClient",
+      "lastVersionId": "MicroClient"
     }
   },
-  "selectedProfile": "(Default)"
+  "selectedProfile": "MicroClient"
 }

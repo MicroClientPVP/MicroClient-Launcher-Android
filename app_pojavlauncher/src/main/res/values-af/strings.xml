@@ -61,3 +61,4 @@
     <string name="mg_renderer_title_errorSetting">Error Filtering</string>
     <string name="mg_renderer_title_computeShaderext">Advertise Experimental Compute Shader extension</string>
 </resources>
+
