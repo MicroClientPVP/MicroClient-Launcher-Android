@@ -1,15 +1,12 @@
-<h1 align="center">Angel Aura Amethyst</h1>
+<h1 align="center">Micro Client Launcher Android</h1>
 
-<img src="https://github.com/AngelAuraMC/Amethyst-Android/blob/v3_openjdk/app_pojavlauncher/src/main/assets/amethyst.png" align="left" width="130" height="130" alt="Amethyst logo">
+<img src="https://github.com/MicroClientPVP/MicroClient-Launcher-Android/blob/v3_openjdk/app_pojavlauncher/src/main/assets/MicroClientLogo_250x250_White_NoText.png" align="left" width="130" height="130" alt="Micro Client logo">
 
-[![Android CI](https://github.com/AngelAuraMC/Amethyst-Android/workflows/Android%20CI/badge.svg)](https://github.com/AngelAuraMC/Amethyst-Android/actions)
-[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/AngelAuraMC/Amethyst-Android)](https://github.com/AngelAuraMC/Amethyst-Android/actions)
-[![Crowdin](https://badges.crowdin.net/pojavlauncher/localized.svg)](https://crowdin.com/project/pojavlauncher)
-[![Discord](https://img.shields.io/discord/724163890803638273.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/5ptqkyZxEy)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/m/MicroClientPVP/MicroClient-Launcher-Android)](https://github.com/MicroClientPVP/MicroClient-Launcher-Android/actions)
 
-*From [Boardwalk](https://github.com/zhuowei/Boardwalk)'s ashes and [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher)'s ruined reputation, here comes Amethyst!*
+*From [Boardwalk](https://github.com/zhuowei/Boardwalk)'s ashes, [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher)'s ruined reputation, and [Amethyst](https://github.com/AngelAuraMC/Amethyst-Android)'s great base, here comes Micro Client Launcher for our PVP Client!*
 
-Amethyst is a launcher that allows you to play Minecraft: Java Edition on your Android and [iOS](https://github.com/AngelAuraMC/Amethyst-iOS) devices.
+Micro Client Launcher Android is the phone launcher of [MicroClient](https://microclient.komas19.party) that allows you to play Micro Client on your Android device.
 
 For more details, check out our [wiki](https://wiki.angelauramc.dev)!
 
