@@ -68,7 +68,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v3
         with:
           validate-wrappers: false
-          gradle-version: "8.11"
+          gradle-version: "9.5.0"
 
       - name: Build Debug .apk
         run: |
