@@ -16,3 +16,7 @@ app_pojavlauncher/.cxx/
 /app_pojavlauncher/curseforge_key.txt
 
 .env.bat
+
+# Logcat files
+*logcat*
+*.logcat
