@@ -95,7 +95,7 @@ void *custom_dlsym(void *handle, const char *symbol) {
     if (sdl3_handle && handle == sdl3_handle && strcmp(symbol, "JNI_OnLoad") == 0) {
         orig_sdl3_JNI_OnLoad = (JNI_OnLoad_t) result;
         // This outputs in the minecraft logs
-        LOGI("Amethyst-Android: Intercepted SDL3 JNI_OnLoad: %p", result);
+        LOGI("MicroClient Launcher Android: Intercepted SDL3 JNI_OnLoad: %p", result);
         return (void *) custom_sdl3_JNI_OnLoad;
     }
     return result;
