@@ -112,15 +112,15 @@ import java.util.Map;
 
 @SuppressWarnings("IOStreamConstructor")
 public final class Tools {
-    public  static final float BYTE_TO_MB = 1024 * 1024;
+    public static final float BYTE_TO_MB = 1024 * 1024;
     public static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
-    public static String APP_NAME = "Amethyst";
+    public static String APP_NAME = "MicroClient Launcher Android";
 
     public static final Gson GLOBAL_GSON = new GsonBuilder().setPrettyPrinting().create();
 
     public static final String URL_HOME = "https://wiki.angelauramc.dev";
     public static String NATIVE_LIB_DIR;
-    public static String DIR_DATA; //Initialized later to get context
+    public static String DIR_DATA; // Initialized later to get context
     public static File DIR_CACHE;
     public static String MULTIRT_HOME;
     public static String LOCAL_RENDERER = null;
@@ -129,7 +129,8 @@ public final class Tools {
 
     // New since 3.3.1
     public static String DIR_ACCOUNT_NEW;
-    public static String DIR_GAME_HOME = Environment.getExternalStorageDirectory().getAbsolutePath() + "/games/Amethyst";
+    public static String DIR_GAME_HOME = Environment.getExternalStorageDirectory().getAbsolutePath()
+            + "/games/MicroClientLauncherAndroid";
     public static String DIR_GAME_NEW;
     public static String GAME_PROFILES_FILE;
 
@@ -151,34 +152,38 @@ public final class Tools {
     public static String sLwjglVersion = null;
     public static String lwjglNativesDir = null;
 
-
     private static File getPojavStorageRoot(Context ctx) {
-        if(SDK_INT >= 29) {
+        if (SDK_INT >= 29) {
             return ctx.getExternalFilesDir(null);
-        }else{
-            return new File(Environment.getExternalStorageDirectory(),"games/Amethyst");
+        } else {
+            return new File(Environment.getExternalStorageDirectory(), "games/Amethyst");
         }
     }
 
     /**
      * Checks if the Pojav's storage root is accessible and read-writable
+     * 
      * @param context context to get the storage root if it's not set yet
      * @return true if storage is fine, false if storage is not accessible
      */
     public static boolean checkStorageRoot(Context context) {
-        File externalFilesDir = DIR_GAME_HOME  == null ? Tools.getPojavStorageRoot(context) : new File(DIR_GAME_HOME);
-        //externalFilesDir == null when the storage is not mounted if it was obtained with the context call
-        return externalFilesDir != null && Environment.getExternalStorageState(externalFilesDir).equals(Environment.MEDIA_MOUNTED);
+        File externalFilesDir = DIR_GAME_HOME == null ? Tools.getPojavStorageRoot(context) : new File(DIR_GAME_HOME);
+        // externalFilesDir == null when the storage is not mounted if it was obtained
+        // with the context call
+        return externalFilesDir != null
+                && Environment.getExternalStorageState(externalFilesDir).equals(Environment.MEDIA_MOUNTED);
     }
 
     /**
-     * Checks if the Pojav's storage root is accessible and read-writable. If it's not, starts
+     * Checks if the Pojav's storage root is accessible and read-writable. If it's
+     * not, starts
      * the MissingStorageActivity and finishes the supplied activity.
+     * 
      * @param context the Activity that checks for storage availability
      * @return whether the storage is available or not.
      */
     public static boolean checkStorageInteractive(Activity context) {
-        if(!Tools.checkStorageRoot(context)) {
+        if (!Tools.checkStorageRoot(context)) {
             context.startActivity(new Intent(context, MissingStorageActivity.class));
             context.finish();
             return false;
@@ -187,10 +192,13 @@ public final class Tools {
     }
 
     /**
-     * Initialize context constants most necessary for launcher's early startup phase
+     * Initialize context constants most necessary for launcher's early startup
+     * phase
      * that are not dependent on user storage.
-     * All values that depend on DIR_DATA and are not dependent on DIR_GAME_HOME must
+     * All values that depend on DIR_DATA and are not dependent on DIR_GAME_HOME
+     * must
      * be initialized here.
+     * 
      * @param ctx the context for initialization.
      */
     public static void initEarlyConstants(Context ctx) {
@@ -204,9 +212,10 @@ public final class Tools {
     /**
      * Initialize context constants that depend on user storage.
      * Any value (in)directly dependent on DIR_GAME_HOME should be set only here.
-     * You ABSOLUTELY MUST check for storage presence using checkStorageRoot() before calling this.
+     * You ABSOLUTELY MUST check for storage presence using checkStorageRoot()
+     * before calling this.
      */
-    public static void initStorageConstants(Context ctx){
+    public static void initStorageConstants(Context ctx) {
         initEarlyConstants(ctx);
         DIR_GAME_HOME = getPojavStorageRoot(ctx).getAbsolutePath();
         DIR_GAME_NEW = DIR_GAME_HOME + "/.minecraft";
@@ -222,17 +231,17 @@ public final class Tools {
     }
 
     @SuppressLint("PrivateApi")
-    private static String systemPropertiesGet(String systemProperty) throws NoSuchMethodException, ClassNotFoundException, InvocationTargetException, IllegalAccessException {
+    private static String systemPropertiesGet(String systemProperty)
+            throws NoSuchMethodException, ClassNotFoundException, InvocationTargetException, IllegalAccessException {
         Class<?> cSystemProperties = Class.forName("android.os.SystemProperties");
         Method get = cSystemProperties.getMethod("get", String.class);
         return (String) get.invoke(null, systemProperty);
     }
 
-    private static boolean isAdreno740(){
+    private static boolean isAdreno740() {
         try {
             BufferedReader br = new BufferedReader(
-                    new FileReader("/sys/class/kgsl/kgsl-3d0/gpu_model")
-            );
+                    new FileReader("/sys/class/kgsl/kgsl-3d0/gpu_model"));
             String gpuRenderer = br.readLine();
             return gpuRenderer != null &&
                     gpuRenderer.toLowerCase().contains("adreno") &&
@@ -245,13 +254,16 @@ public final class Tools {
 
     /**
      * Detects whether or not you are on OneUI and using Adreno 740
-     * <a href="https://gitlab.freedesktop.org/mesa/mesa/-/blob/main/src/freedreno/common/freedreno_devices.py?ref_type=heads#L1007-L1009">
-     *     Mesa sets it to 0 by default due to vendor quirks
+     * <a href=
+     * "https://gitlab.freedesktop.org/mesa/mesa/-/blob/main/src/freedreno/common/freedreno_devices.py?ref_type=heads#L1007-L1009">
+     * Mesa sets it to 0 by default due to vendor quirks
      * </a>
      * It is possible that OneUI simply deviates from this commonality, hence why
-     * <a href="https://github.com/K11MCH1/AdrenoToolsDrivers/releases/tag/v26.0.0-rc07">
-     *     this is a common fix
+     * <a href=
+     * "https://github.com/K11MCH1/AdrenoToolsDrivers/releases/tag/v26.0.0-rc07">
+     * this is a common fix
      * </a>
+     * 
      * @return Whether or not to export FD_DEV_FEATURES=enable_ubwc_flag_hint=1
      */
     public static boolean shouldUseUBWC() {
@@ -264,7 +276,6 @@ public final class Tools {
         }
     }
 
-
     /**
      * @return The selected "Custom path" of the current profile
      */
@@ -276,6 +287,7 @@ public final class Tools {
     /**
      * Searches for mod in mods directory of current selected profile
      * Not case-sensitive
+     * 
      * @param filenames Filename(s) of the .jar mod(s)
      * @return Whether or not the .jar is found
      */
@@ -286,6 +298,7 @@ public final class Tools {
     /**
      * Searches for mod in mods directory of current selected profile
      * Not case-sensitive
+     * 
      * @param filenames Filename(s) of the .jar mod(s)
      * @return The found mods
      */
@@ -293,7 +306,8 @@ public final class Tools {
         File gameDir = getGameDir();
         File modsDir = new File(gameDir, "mods");
         File[] modFiles = modsDir.listFiles(file -> file.isFile() && file.getName().toLowerCase().endsWith(".jar"));
-        if (modFiles == null) return new ArrayList<>();
+        if (modFiles == null)
+            return new ArrayList<>();
         List<File> foundModFiles = new ArrayList<>();
         for (File file : modFiles) {
             for (String filename : filenames)
@@ -307,43 +321,47 @@ public final class Tools {
     }
 
     /**
-     * Tries to delete any sodium related mods of the currently selected profile via string matching
+     * Tries to delete any sodium related mods of the currently selected profile via
+     * string matching
      * the files in the mods folder.
      */
     public static void deleteSodiumMods() {
         File modsDir = new File(getGameDir(), "mods");
         File[] mods = modsDir.listFiles(file -> file.isFile() && file.getName().endsWith(".jar"));
-        if(mods == null) ;
-        for(File file : mods) {
+        if (mods == null)
+            ;
+        for (File file : mods) {
             String name = file.getName().toLowerCase();
-            if(name.contains("sodium") ||
-                    name.contains("beddium")    || // Also covers embeddium
-                    name.contains("rubidium")   ||
-                    name.contains("xenon")      || // Name conflicts with another mod
-                    name.contains("celeritas")  ||
-                    name.contains("relictium")  ||
-                    name.contains("vintagium")  ||
-                    name.contains("podium")     ||
-                    name.contains("indium")     ||
-                    name.contains("lazurite")   ||
-                    name.contains("iris")       ||
-                    name.contains("monocle")    ||
-                    name.contains("voxy")       ||
-                    name.contains("nvidium")    ||
-                    name.contains("chloride")   ||
-                    name.contains("bedrodium")  ||
-                    name.contains("substrate")  || // Name conflicts with another mod
-                    name.contains("blendium")   ||
+            if (name.contains("sodium") ||
+                    name.contains("beddium") || // Also covers embeddium
+                    name.contains("rubidium") ||
+                    name.contains("xenon") || // Name conflicts with another mod
+                    name.contains("celeritas") ||
+                    name.contains("relictium") ||
+                    name.contains("vintagium") ||
+                    name.contains("podium") ||
+                    name.contains("indium") ||
+                    name.contains("lazurite") ||
+                    name.contains("iris") ||
+                    name.contains("monocle") ||
+                    name.contains("voxy") ||
+                    name.contains("nvidium") ||
+                    name.contains("chloride") ||
+                    name.contains("bedrodium") ||
+                    name.contains("substrate") || // Name conflicts with another mod
+                    name.contains("blendium") ||
                     name.contains("ryoamium")
-                // The name conflicts are for pretty dead mods so we ignore them.
-                // I doubt they're using some mod with less than 5k downloads with sodium.
-            ) if(!file.delete())
-                throw new RuntimeException("Failed to delete Sodium and related mods!");
+            // The name conflicts are for pretty dead mods so we ignore them.
+            // I doubt they're using some mod with less than 5k downloads with sodium.
+            )
+                if (!file.delete())
+                    throw new RuntimeException("Failed to delete Sodium and related mods!");
         }
     }
 
     /**
-     * Search for TouchController mod to automatically enable TouchController mod support.
+     * Search for TouchController mod to automatically enable TouchController mod
+     * support.
      *
      * @param gameDir current game directory
      * @return whether TouchController is found
@@ -364,62 +382,72 @@ public final class Tools {
     }
 
     /**
-     * Initialize OpenGL and do checks to see if the GPU of the device is affected by the render
+     * Initialize OpenGL and do checks to see if the GPU of the device is affected
+     * by the render
      * distance issue.
-
-     * Currently only checks whether the user has an Adreno GPU capable of OpenGL ES 3.
-
-     * This issue is caused by a very severe limit on the amount of GL buffer names that could be allocated
+     * 
+     * Currently only checks whether the user has an Adreno GPU capable of OpenGL ES
+     * 3.
+     * 
+     * This issue is caused by a very severe limit on the amount of GL buffer names
+     * that could be allocated
      * by the Adreno properietary GLES driver.
-
-     * @return whether the GPU is affected by the Large Thin Wrapper render distance issue on vanilla
+     * 
+     * @return whether the GPU is affected by the Large Thin Wrapper render distance
+     *         issue on vanilla
      */
     private static boolean affectedByRenderDistanceIssue() {
         GLInfoUtils.GLInfo info = GLInfoUtils.getGlInfo();
         return info.isAdreno() && info.glesMajorVersion >= 3;
     }
 
-    private static String[] sodiumMods = {"sodium", "embeddium", "rubidium", "xenon"};
+    private static String[] sodiumMods = { "sodium", "embeddium", "rubidium", "xenon" };
 
     private static boolean affectedByLTWRenderDistanceIssue() {
-        if(!"opengles3_ltw".equals(Tools.LOCAL_RENDERER)) return false;
-        if(!affectedByRenderDistanceIssue()) return false;
-        if(hasMods(sodiumMods)) return false;
+        if (!"opengles3_ltw".equals(Tools.LOCAL_RENDERER))
+            return false;
+        if (!affectedByRenderDistanceIssue())
+            return false;
+        if (hasMods(sodiumMods))
+            return false;
 
         int renderDistance;
         try {
             MCOptionUtils.load();
             String renderDistanceString = MCOptionUtils.get("renderDistance");
             renderDistance = Integer.parseInt(renderDistanceString);
-        }catch (Exception e) {
+        } catch (Exception e) {
             Log.e("Tools", "Failed to check render distance", e);
             renderDistance = 12; // Assume Minecraft's default render distance
         }
-        // 7 is the render distance "magic number" above which MC creates too many buffers
+        // 7 is the render distance "magic number" above which MC creates too many
+        // buffers
         // for Adreno's OpenGL ES implementation
         return renderDistance > 7;
     }
 
     public static void launchMinecraft(final AppCompatActivity activity, MinecraftAccount minecraftAccount,
-                                       MinecraftProfile minecraftProfile, String versionId, int versionJavaRequirement) throws Throwable {
+            MinecraftProfile minecraftProfile, String versionId, int versionJavaRequirement) throws Throwable {
         int freeDeviceMemory = getFreeDeviceMemory(activity);
         int localeString;
         int freeAddressSpace = Architecture.is32BitsDevice() ? getMaxContinuousAddressSpaceSize() : -1;
         Log.i("MemStat", "Free RAM: " + freeDeviceMemory + " Addressable: " + freeAddressSpace);
-        if(freeDeviceMemory > freeAddressSpace && freeAddressSpace != -1) {
+        if (freeDeviceMemory > freeAddressSpace && freeAddressSpace != -1) {
             freeDeviceMemory = freeAddressSpace;
             localeString = R.string.address_memory_warning_msg;
         } else {
             localeString = R.string.memory_warning_msg;
         }
 
-        if(LauncherPreferences.PREF_RAM_ALLOCATION > freeDeviceMemory) {
+        if (LauncherPreferences.PREF_RAM_ALLOCATION > freeDeviceMemory) {
             int finalDeviceMemory = freeDeviceMemory;
-            LifecycleAwareAlertDialog.DialogCreator dialogCreator = (dialog, builder) ->
-                builder.setMessage(activity.getString(localeString, finalDeviceMemory, LauncherPreferences.PREF_RAM_ALLOCATION))
-                        .setPositiveButton(android.R.string.ok, (d, w)->{});
+            LifecycleAwareAlertDialog.DialogCreator dialogCreator = (dialog, builder) -> builder
+                    .setMessage(activity.getString(localeString, finalDeviceMemory,
+                            LauncherPreferences.PREF_RAM_ALLOCATION))
+                    .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    });
 
-            if(LifecycleAwareAlertDialog.haltOnDialog(activity.getLifecycle(), activity, dialogCreator)) {
+            if (LifecycleAwareAlertDialog.haltOnDialog(activity.getLifecycle(), activity, dialogCreator)) {
                 return; // If the dialog's lifecycle has ended, return without
                 // actually launching the game, thus giving us the opportunity
                 // to start after the activity is shown again
@@ -429,26 +457,26 @@ public final class Tools {
         File gamedir = Tools.getGameDirPath(minecraftProfile);
         startControllableMitigation(activity, gamedir);
         startOldLegacy4JMitigation(activity, gamedir);
-        if(affectedByLTWRenderDistanceIssue()) {
-            LifecycleAwareAlertDialog.DialogCreator dialogCreator = ((alertDialog, dialogBuilder) ->
-                    dialogBuilder.setMessage(activity.getString(R.string.ltw_render_distance_warning_msg))
-                            .setPositiveButton(android.R.string.ok, (d, w)->{}));
-            if(LifecycleAwareAlertDialog.haltOnDialog(activity.getLifecycle(), activity, dialogCreator)) {
+        if (affectedByLTWRenderDistanceIssue()) {
+            LifecycleAwareAlertDialog.DialogCreator dialogCreator = ((alertDialog, dialogBuilder) -> dialogBuilder
+                    .setMessage(activity.getString(R.string.ltw_render_distance_warning_msg))
+                    .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    }));
+            if (LifecycleAwareAlertDialog.haltOnDialog(activity.getLifecycle(), activity, dialogCreator)) {
                 return;
             }
-            // If the code goes here, it means that the user clicked "OK". Fix the render distance.
+            // If the code goes here, it means that the user clicked "OK". Fix the render
+            // distance.
             try {
                 MCOptionUtils.set("renderDistance", "7");
                 MCOptionUtils.save();
-            }catch (Exception e) {
+            } catch (Exception e) {
                 Log.e("Tools", "Failed to fix render distance setting", e);
             }
         }
 
-
         Runtime runtime = MultiRTUtils.forceReread(Tools.pickRuntime(minecraftProfile, versionJavaRequirement));
         JMinecraftVersionList.Version versionInfo = Tools.getVersionInfo(versionId);
-
 
         // Pre-process specific files
         disableSplash(gamedir);
@@ -457,7 +485,6 @@ public final class Tools {
         // Select the appropriate openGL version
         OldVersionsUtils.selectOpenGlVersion(versionInfo);
 
-
         String launchClasspath = generateLaunchClasspath(versionInfo, versionId);
 
         List<String> javaArgList = new ArrayList<>();
@@ -465,14 +492,15 @@ public final class Tools {
         getCacioJavaArgs(javaArgList, runtime.javaVersion == 8, activity);
 
         if (versionInfo.logging != null) {
-            String configFile = Tools.DIR_DATA + "/security/" + versionInfo.logging.client.file.id.replace("client", "log4j-rce-patch");
+            String configFile = Tools.DIR_DATA + "/security/"
+                    + versionInfo.logging.client.file.id.replace("client", "log4j-rce-patch");
             if (!new File(configFile).exists()) {
                 configFile = Tools.DIR_GAME_NEW + "/" + versionInfo.logging.client.file.id;
             }
             javaArgList.add("-Dlog4j.configurationFile=" + configFile);
         }
 
-        File versionSpecificNativesDir = new File(Tools.DIR_CACHE, "natives/"+versionId);
+        File versionSpecificNativesDir = new File(Tools.DIR_CACHE, "natives/" + versionId);
         StringBuilder javaLibraryPath = new StringBuilder();
 
         // Add which lwjgl natives to use into classpath
@@ -480,46 +508,55 @@ public final class Tools {
 
         // Add JNA native if needed
         javaLibraryPath.append(Tools.NATIVE_LIB_DIR).append(":");
-        if(versionSpecificNativesDir.exists()) {
+        if (versionSpecificNativesDir.exists()) {
             String dirPath = versionSpecificNativesDir.getAbsolutePath();
             javaLibraryPath.append(dirPath).append(":");
-            javaArgList.add("-Djna.boot.library.path="+dirPath);
+            javaArgList.add("-Djna.boot.library.path=" + dirPath);
         }
-        javaArgList.add("-Djava.library.path="+javaLibraryPath);
+        javaArgList.add("-Djava.library.path=" + javaLibraryPath);
 
         javaArgList.addAll(Arrays.asList(getMinecraftJVMArgs(versionId, gamedir)));
-        javaArgList.add("-cp"); javaArgList.add(launchClasspath);
+        javaArgList.add("-cp");
+        javaArgList.add(launchClasspath);
 
-        // Some modloaders (babric) don't fully respect java.libary.path and only use the native lib dir
-        // This arg makes them use it. LWJGL prioritizes this path during native loading as well.
-        javaArgList.add("-Dorg.lwjgl.librarypath="+lwjglNativesDir);
+        // Some modloaders (babric) don't fully respect java.libary.path and only use
+        // the native lib dir
+        // This arg makes them use it. LWJGL prioritizes this path during native loading
+        // as well.
+        javaArgList.add("-Dorg.lwjgl.librarypath=" + lwjglNativesDir);
 
         // Forge 1.6.4 crash mitigation
         // https://github.com/MinecraftForge/FML/blob/f1b3381e61fac1a0ae90f521223c6bc613eb4888/common/cpw/mods/fml/common/asm/FMLSanityChecker.java#L192-L208
-        // It for some reason fails certification and crashes because it thinks Minecraft is corrupted.
+        // It for some reason fails certification and crashes because it thinks
+        // Minecraft is corrupted.
         // This also has no loading screen as a result.
         javaArgList.add("-Dfml.ignoreInvalidMinecraftCertificates=true");
 
-        // imgui-java set library name to use. This because Axiom uses a fork with different library naming
-        // logic that doesn't seem to appear in the main repository. I'm not gonna work with that.
+        // imgui-java set library name to use. This because Axiom uses a fork with
+        // different library naming
+        // logic that doesn't seem to appear in the main repository. I'm not gonna work
+        // with that.
         javaArgList.add("-Dimgui.library.name=imgui-java");
         // We use an abomination to support all DH versions with a single library.
-        javaArgList.add("-DZstdNativePath="+Tools.NATIVE_LIB_DIR+"/libzstd-jni-1.5.7-6-dhcompat.so");
+        javaArgList.add("-DZstdNativePath=" + Tools.NATIVE_LIB_DIR + "/libzstd-jni-1.5.7-6-dhcompat.so");
         // We only ever reach this point when user has already used the force run switch
         boolean hasSodiumMod = false;
         for (String modName : sodiumMods) {
             if (hasMods(sodiumMods)) {
                 hasSodiumMod = true;
                 File mixinPropertiesConfigFile = new File(getGameDir(), "config/" + modName + "-mixins.properties");
-                // Write mixin configs to somewhat help stability. We don't want more people complaining.
+                // Write mixin configs to somewhat help stability. We don't want more people
+                // complaining.
                 String[] propertiesToAdd = {
                         "mixin.features.buffer_builder.intrinsics=false",
                         "mixin.features.chunk_rendering=false"
                 };
                 List<String> mixinPropertiesConfigStrings = null;
                 try {
-                    mixinPropertiesConfigStrings = org.apache.commons.io.FileUtils.readLines(mixinPropertiesConfigFile, "UTF-8");
-                } catch (IOException ignored) {}
+                    mixinPropertiesConfigStrings = org.apache.commons.io.FileUtils.readLines(mixinPropertiesConfigFile,
+                            "UTF-8");
+                } catch (IOException ignored) {
+                }
                 if (mixinPropertiesConfigStrings == null) {
                     mixinPropertiesConfigStrings = new ArrayList<>();
                 }
@@ -530,29 +567,38 @@ public final class Tools {
                 }
                 try {
                     org.apache.commons.io.FileUtils.writeLines(mixinPropertiesConfigFile, mixinPropertiesConfigStrings);
-                } catch (IOException ignored) {} // If we can't write it, we tried our best.
+                } catch (IOException ignored) {
+                } // If we can't write it, we tried our best.
 
             }
         }
         // We use a janky lwjgl setup. We don't want more people complaining it crashes.
-        if (hasSodiumMod) javaArgList.add("-Dsodium.checks.issue2561=false");
+        if (hasSodiumMod)
+            javaArgList.add("-Dsodium.checks.issue2561=false");
         javaArgList.add(versionInfo.mainClass);
         javaArgList.addAll(Arrays.asList(launchArgs));
         // ctx.appendlnToLog("full args: "+javaArgList.toString());
         String args = LauncherPreferences.PREF_CUSTOM_JAVA_ARGS;
-        if(Tools.isValidString(minecraftProfile.javaArgs)) args = minecraftProfile.javaArgs;
+        if (Tools.isValidString(minecraftProfile.javaArgs))
+            args = minecraftProfile.javaArgs;
         FFmpegPlugin.discover(activity);
         JREUtils.launchJavaVM(activity, runtime, gamedir, javaArgList, args);
-        // If we returned, this means that the JVM exit dialog has been shown and we don't need to be active anymore.
-        // We never return otherwise. The process will be killed anyway, and thus we will become inactive
+        // If we returned, this means that the JVM exit dialog has been shown and we
+        // don't need to be active anymore.
+        // We never return otherwise. The process will be killed anyway, and thus we
+        // will become inactive
     }
+
     private static Logger.eventLogListener controllableMitigationLogListener;
+
     /*
      * This is does not work when debugging. This is not reliable.
-     * This is a monstrosity that races the mod, trying to ensure that when the folder is checked
-     * after extraction but before dlopen, it is empty, so it loads the bundled SDL2 we have instead
+     * This is a monstrosity that races the mod, trying to ensure that when the
+     * folder is checked
+     * after extraction but before dlopen, it is empty, so it loads the bundled SDL2
+     * we have instead
      */
-    private static void startControllableMitigation(Activity activity ,File gamedir) {
+    private static void startControllableMitigation(Activity activity, File gamedir) {
         String TAG = "ControllableMitigation";
         File deleted = new File(gamedir + "/controllable_natives/SDL");
         boolean hasControllable = false;
@@ -569,12 +615,16 @@ public final class Tools {
         }
         if (hasControllable) {
             Tools.runOnUiThread(() -> {
-                Tools.dialog(activity, activity.getString(R.string.global_warning), activity.getString(R.string.controllableFound));
+                Tools.dialog(activity, activity.getString(R.string.global_warning),
+                        activity.getString(R.string.controllableFound));
             });
             Thread mitigationThread = new Thread(() -> {
                 // This is total garbage but it seems to be the best jank for the job
                 Log.i(TAG, "Controllable detected! Starting mitigation thread");
-                try {org.apache.commons.io.FileUtils.deleteDirectory(deleted);} catch (IOException ignored) {}
+                try {
+                    org.apache.commons.io.FileUtils.deleteDirectory(deleted);
+                } catch (IOException ignored) {
+                }
                 while (!Thread.currentThread().isInterrupted()) {
                     // Looks for controllable_natives/SDL/<sdl_version_number>/libSDL2.so and
                     // deletes it. We can assume array index 0 because this dir gets fully deleted
@@ -591,7 +641,8 @@ public final class Tools {
                     }
                 }
                 // We can end here because SdlNativeLibraryLoader only extracts libSDL2.so once
-                // If NativeLibrary can't find it in the folder to load() it uses java.library.path
+                // If NativeLibrary can't find it in the folder to load() it uses
+                // java.library.path
                 Log.i(TAG, "Success! Ending Controllable crash mitigation..");
             });
             mitigationThread.start();
@@ -608,20 +659,24 @@ public final class Tools {
     }
 
     private static Logger.eventLogListener oldL4JMitigationLogListener;
+
     /// TODO: Remove when the time is right
     /**
-     * Legacy4J for a long time had broken SDL detection for android, we need to check and
-     * accommodate this for now. At least until the broken logic are on versions considered
+     * Legacy4J for a long time had broken SDL detection for android, we need to
+     * check and
+     * accommodate this for now. At least until the broken logic are on versions
+     * considered
      * obsolete.
      * <p>
-     * This is of course, very jank, it does not work for anything below 1.7.5 but why is anyone
+     * This is of course, very jank, it does not work for anything below 1.7.5 but
+     * why is anyone
      * on that version anyway? Legacy4J has LTS for like all the versions.
      */
     private static void startOldLegacy4JMitigation(Activity activity, File gamedir) {
         boolean hasLegacy4J = false;
         File modsDir = new File(gamedir, "mods");
         File[] mods = modsDir.listFiles(file -> file.isFile() && file.getName().endsWith(".jar"));
-        if(mods != null) {
+        if (mods != null) {
             for (File file : mods) {
                 String name = file.getName();
                 if (name.contains("Legacy4J")) {
@@ -634,15 +689,19 @@ public final class Tools {
             String TAG = "OldLegacy4JMitigation";
             Log.i(TAG, "Legacy4J detected!");
             oldL4JMitigationLogListener = loggedLine -> {
-                if (loggedLine.contains("literal{SDL3 (isXander's libsdl4j)} isn't supported in this system. GLFW will be used instead.")) {
-                    Logger.appendToLog("Amethyst-Android: Broken version of Legacy4J (below 1.8.51.8.5.2537.1) detected! Force enabling SDL");
+                if (loggedLine.contains(
+                        "literal{SDL3 (isXander's libsdl4j)} isn't supported in this system. GLFW will be used instead.")) {
+                    Logger.appendToLog(
+                            "Amethyst-Android: Broken version of Legacy4J (below 1.8.51.8.5.2537.1) detected! Force enabling SDL");
                     Tools.SDL.initializeControllerSubsystems();
                     Tools.runOnUiThread(() -> {
-                        Tools.dialog(activity, activity.getString(R.string.global_warning), activity.getString(R.string.oldL4JFound));
+                        Tools.dialog(activity, activity.getString(R.string.global_warning),
+                                activity.getString(R.string.oldL4JFound));
                     });
                     Logger.removeLogListener(oldL4JMitigationLogListener);
                 } else if (loggedLine.contains("Added SDL Controller Mappings")) {
-                    Logger.appendToLog("Amethyst-Android: Fixed version of Legacy4J (1.8.5.2537.1 or higher) detected! Have fun!");
+                    Logger.appendToLog(
+                            "Amethyst-Android: Fixed version of Legacy4J (1.8.5.2537.1 or higher) detected! Have fun!");
                     Logger.removeLogListener(oldL4JMitigationLogListener);
                 }
             };
@@ -650,27 +709,30 @@ public final class Tools {
         }
     }
 
-    public static File getGameDirPath(@NonNull MinecraftProfile minecraftProfile){
-        if(minecraftProfile.gameDir != null){
-            if(minecraftProfile.gameDir.startsWith(Tools.LAUNCHERPROFILES_RTPREFIX))
-                return new File(minecraftProfile.gameDir.replace(Tools.LAUNCHERPROFILES_RTPREFIX,Tools.DIR_GAME_HOME+"/"));
+    public static File getGameDirPath(@NonNull MinecraftProfile minecraftProfile) {
+        if (minecraftProfile.gameDir != null) {
+            if (minecraftProfile.gameDir.startsWith(Tools.LAUNCHERPROFILES_RTPREFIX))
+                return new File(
+                        minecraftProfile.gameDir.replace(Tools.LAUNCHERPROFILES_RTPREFIX, Tools.DIR_GAME_HOME + "/"));
             else
-                return new File(Tools.DIR_GAME_HOME,minecraftProfile.gameDir);
+                return new File(Tools.DIR_GAME_HOME, minecraftProfile.gameDir);
         }
         return new File(Tools.DIR_GAME_NEW);
     }
 
-    public static void buildNotificationChannel(Context context){
-        if(Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+    public static void buildNotificationChannel(Context context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
+            return;
         NotificationChannel channel = new NotificationChannel(
                 context.getString(R.string.notif_channel_id),
                 context.getString(R.string.notif_channel_name), NotificationManager.IMPORTANCE_DEFAULT);
         NotificationManagerCompat manager = NotificationManagerCompat.from(context);
         manager.createNotificationChannel(channel);
     }
+
     public static void disableSplash(File dir) {
         File configDir = new File(dir, "config");
-        if(FileUtils.ensureDirectorySilently(configDir)) {
+        if (FileUtils.ensureDirectorySilently(configDir)) {
             File forgeSplashFile = new File(dir, "config/splash.properties");
             String forgeSplashContent = "enabled=true";
             try {
@@ -692,7 +754,8 @@ public final class Tools {
     public static void getCacioJavaArgs(List<String> javaArgList, boolean isJava8, Activity activity) {
         // Caciocavallo config AWT-enabled version
         javaArgList.add("-Djava.awt.headless=false");
-        javaArgList.add("-Dcacio.managed.screensize=" + AWTCanvasView.AWT_CANVAS_WIDTH + "x" + AWTCanvasView.AWT_CANVAS_HEIGHT);
+        javaArgList.add(
+                "-Dcacio.managed.screensize=" + AWTCanvasView.AWT_CANVAS_WIDTH + "x" + AWTCanvasView.AWT_CANVAS_HEIGHT);
         javaArgList.add("-Dcacio.font.fontmanager=sun.awt.X11FontManager");
         javaArgList.add("-Dcacio.font.fontscaler=sun.font.FreetypeFontScaler");
         javaArgList.add("-Dswing.defaultlaf=javax.swing.plaf.metal.MetalLookAndFeel");
@@ -701,19 +764,20 @@ public final class Tools {
             javaArgList.add("-Djava.awt.graphicsenv=net.java.openjdk.cacio.ctc.CTCGraphicsEnvironment");
         } else {
             File caciocavavallo17Dir = new File(Tools.DIR_GAME_HOME, "caciocavallo17");
-            File[] caciocavallo17Jars = caciocavavallo17Dir.listFiles((f, s) ->s.contains("cacio-tta"));
-            if(caciocavallo17Jars == null || caciocavallo17Jars.length < 1) {
-            // We wanna avoid the launch being interrupted so we extract again if it isn't found
+            File[] caciocavallo17Jars = caciocavavallo17Dir.listFiles((f, s) -> s.contains("cacio-tta"));
+            if (caciocavallo17Jars == null || caciocavallo17Jars.length < 1) {
+                // We wanna avoid the launch being interrupted so we extract again if it isn't
+                // found
                 AsyncAssetManager.unpackComponents(activity);
-                caciocavallo17Jars = caciocavavallo17Dir.listFiles((f, s) ->s.contains("cacio-tta"));
-                if(caciocavallo17Jars == null || caciocavallo17Jars.length < 1)
+                caciocavallo17Jars = caciocavavallo17Dir.listFiles((f, s) -> s.contains("cacio-tta"));
+                if (caciocavallo17Jars == null || caciocavallo17Jars.length < 1)
                     throw new RuntimeException("Failed to extract required assets!");
             }
-            javaArgList.add("-javaagent:"+caciocavallo17Jars[0].getAbsolutePath());
+            javaArgList.add("-javaagent:" + caciocavallo17Jars[0].getAbsolutePath());
             javaArgList.add("-Dawt.toolkit=com.github.caciocavallosilano.cacio.ctc.CTCToolkit");
             javaArgList.add("-Djava.awt.graphicsenv=com.github.caciocavallosilano.cacio.ctc.CTCGraphicsEnvironment");
             // This approach breaks kilt so we use an agent instead
-//          javaArgList.add("-Djava.system.class.loader=com.github.caciocavallosilano.cacio.ctc.CTCPreloadClassLoader");
+            // javaArgList.add("-Djava.system.class.loader=com.github.caciocavallosilano.cacio.ctc.CTCPreloadClassLoader");
             javaArgList.add("--add-exports=java.desktop/java.awt=ALL-UNNAMED");
             javaArgList.add("--add-exports=java.desktop/java.awt.peer=ALL-UNNAMED");
             javaArgList.add("--add-exports=java.desktop/sun.awt.image=ALL-UNNAMED");
@@ -769,33 +833,36 @@ public final class Tools {
                 if (arg.equals("-cp")) {
                     continue;
                 }
-                if (arg.equals("${classpath}")){
+                if (arg.equals("${classpath}")) {
                     continue;
                 }
                 // Should fix Forge 1.17.1-37.0.12 and older from crashing
                 // Fixed in forge on https://github.com/MinecraftForge/MinecraftForge/pull/7919
-                // Released as Forge 1.17.1-37.0.13 in https://maven.minecraftforge.net/net/minecraftforge/forge/1.17.1-37.0.13/forge-1.17.1-37.0.13-changelog.txt
+                // Released as Forge 1.17.1-37.0.13 in
+                // https://maven.minecraftforge.net/net/minecraftforge/forge/1.17.1-37.0.13/forge-1.17.1-37.0.13-changelog.txt
                 // yes this duplicates it, it's fine.
-                // FIXME: Workaround old bootstraplauncher <0.1.17 buggy behaviour. See FCL workaround
-                //  https://github.com/FCL-Team/FoldCraftLauncher/blob/00e96bcf8ddc8a550e9aba6091a73d5bee973b54/FCLCore/src/main/java/com/tungsten/fclcore/download/MaintainTask.java#L198-L200
-                if (((String) arg).startsWith("-DignoreList=")){
-                    minecraftArgs.add(arg+",${version_name}.jar");
+                // FIXME: Workaround old bootstraplauncher <0.1.17 buggy behaviour. See FCL
+                // workaround
+                // https://github.com/FCL-Team/FoldCraftLauncher/blob/00e96bcf8ddc8a550e9aba6091a73d5bee973b54/FCLCore/src/main/java/com/tungsten/fclcore/download/MaintainTask.java#L198-L200
+                if (((String) arg).startsWith("-DignoreList=")) {
+                    minecraftArgs.add(arg + ",${version_name}.jar");
                     continue;
                 }
 
                 // TODO: Implement adding launcher brand and version
                 if (((String) arg).contains("minecraft.launcher.brand") ||
-                    ((String) arg).contains("minecraft.launcher.version")) {
+                        ((String) arg).contains("minecraft.launcher.version")) {
                     continue;
                 }
 
                 minecraftArgs.add((String) arg);
-            } //TODO: implement (?maybe?)
+            } // TODO: implement (?maybe?)
         }
         return JSONUtils.insertJSONValueList(minecraftArgs.toArray(new String[0]), varArgMap);
     }
 
-    public static String[] getMinecraftClientArgs(MinecraftAccount profile, JMinecraftVersionList.Version versionInfo, File gameDir) {
+    public static String[] getMinecraftClientArgs(MinecraftAccount profile, JMinecraftVersionList.Version versionInfo,
+            File gameDir) {
         String username = profile.username.replace("Demo.", "");
         String versionName = versionInfo.id;
         if (versionInfo.inheritsFrom != null) {
@@ -806,15 +873,15 @@ public final class Tools {
         try {
             Date creationDate = DateUtils.getOriginalReleaseDate(versionInfo);
             // Minecraft 22w43a which adds chat reporting (and signing) was released on
-            // 26th October 2022. So, if the date is not before that (meaning it is equal or higher)
+            // 26th October 2022. So, if the date is not before that (meaning it is equal or
+            // higher)
             // change the userType to MSA to fix the missing signature
-            if(creationDate != null && !DateUtils.dateBefore(creationDate, 2022, 9, 26)) {
+            if (creationDate != null && !DateUtils.dateBefore(creationDate, 2022, 9, 26)) {
                 userType = "msa";
             }
-        }catch (ParseException e) {
+        } catch (ParseException e) {
             Log.e("CheckForProfileKey", "Failed to determine profile creation date, using \"mojang\"", e);
         }
-
 
         Map<String, String> varArgMap = new ArrayMap<>();
         varArgMap.put("auth_session", profile.accessToken); // For legacy versions of MC
@@ -837,15 +904,16 @@ public final class Tools {
             for (Object arg : versionInfo.arguments.game) {
                 if (arg instanceof String) {
                     minecraftArgs.add((String) arg);
-                } //TODO: implement else clause
+                } // TODO: implement else clause
             }
         }
 
-        String mcArguments = versionInfo.minecraftArguments == null ?
-                fromStringArray(minecraftArgs.toArray(new String[0])):
-                versionInfo.minecraftArguments;
+        String mcArguments = versionInfo.minecraftArguments == null
+                ? fromStringArray(minecraftArgs.toArray(new String[0]))
+                : versionInfo.minecraftArguments;
 
-        if(profile.isDemo()) mcArguments += " --demo";
+        if (profile.isDemo())
+            mcArguments += " --demo";
 
         return JSONUtils.insertJSONValueList(splitAndFilterEmpty(mcArguments), varArgMap);
     }
@@ -853,7 +921,8 @@ public final class Tools {
     public static String fromStringArray(String[] strArr) {
         StringBuilder builder = new StringBuilder();
         for (int i = 0; i < strArr.length; i++) {
-            if (i > 0) builder.append(" ");
+            if (i > 0)
+                builder.append(" ");
             builder.append(strArr[i]);
         }
 
@@ -867,20 +936,21 @@ public final class Tools {
                 strList.add(arg);
             }
         }
-        //strList.add("--fullscreen");
+        // strList.add("--fullscreen");
         return strList.toArray(new String[0]);
     }
 
     public static String artifactToPath(DependentLibrary library) {
         if (library.downloads != null &&
-            library.downloads.artifact != null &&
-            library.downloads.artifact.path != null)
+                library.downloads.artifact != null &&
+                library.downloads.artifact.path != null)
             return library.downloads.artifact.path;
         String[] libInfos = library.name.split(":");
-        return libInfos[0].replaceAll("\\.", "/") + "/" + libInfos[1] + "/" + libInfos[2] + "/" + libInfos[1] + "-" + libInfos[2] + (libInfos.length == 4 ? "-" + libInfos[3] : "") + ".jar";
+        return libInfos[0].replaceAll("\\.", "/") + "/" + libInfos[1] + "/" + libInfos[2] + "/" + libInfos[1] + "-"
+                + libInfos[2] + (libInfos.length == 4 ? "-" + libInfos[3] : "") + ".jar";
     }
 
-    private static String getLibClasspath(JMinecraftVersionList.Version info){
+    private static String getLibClasspath(JMinecraftVersionList.Version info) {
         StringBuilder libClasspath = new StringBuilder();
         String[] classpath = generateLibClasspath(info);
         for (String jarFile : classpath) {
@@ -894,60 +964,66 @@ public final class Tools {
     public static String getClientClasspath(String version) {
         return DIR_HOME_VERSION + "/" + version + "/" + version + ".jar";
     }
+
     public static String generateLaunchClasspath(JMinecraftVersionList.Version info, String actualname) {
-        StringBuilder launchClasspath = new StringBuilder(); //versnDir + "/" + version + "/" + version + ".jar:";
+        StringBuilder launchClasspath = new StringBuilder(); // versnDir + "/" + version + "/" + version + ".jar:";
         String libClasspath = getLibClasspath(info); // Sets lwjglVersion, janky, but we can't get it any simpler
         String internalLwjglVersion = iLwjglVersion >= 341 ? "3.4.1" : "3.3.3";
-        File lwjgl3Folder = new File(Tools.DIR_GAME_HOME, "lwjgl3/"+internalLwjglVersion);
+        File lwjgl3Folder = new File(Tools.DIR_GAME_HOME, "lwjgl3/" + internalLwjglVersion);
         String lwjglCore = lwjgl3Folder.getAbsolutePath() + "/lwjgl.jar";
-        String lwjglMerged = lwjgl3Folder.getAbsolutePath() + "/lwjgl-"+internalLwjglVersion+"-merged-modules.jar";
+        String lwjglMerged = lwjgl3Folder.getAbsolutePath() + "/lwjgl-" + internalLwjglVersion + "-merged-modules.jar";
         String lwjglxFile = lwjgl3Folder + "/lwjgl-lwjglx.jar";
 
         if (!new File(lwjglCore).exists() || !new File(lwjglMerged).exists() || !new File(lwjglxFile).exists()) {
             try { // Delete the folder so on restart will re-extract them.
                 if (lwjgl3Folder.exists())
                     org.apache.commons.io.FileUtils.deleteDirectory(lwjgl3Folder);
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
             throw new RuntimeException("LWJGL jars incomplete, restart the app to reextract them.");
         }
         launchClasspath.append(lwjglCore).append(":");
         // 2nd in priority in case we need to merge lwjgl.jar again for testing
         launchClasspath.append(lwjglMerged).append(":");
 
-        File[] lwjglModules = lwjgl3Folder.listFiles(pathname ->
-                pathname.getName().endsWith(".jar") &&
-                // Exclude our three special jars which goes first, second and last
+        File[] lwjglModules = lwjgl3Folder.listFiles(pathname -> pathname.getName().endsWith(".jar") &&
+        // Exclude our three special jars which goes first, second and last
                 !pathname.getName().equals("lwjgl.jar") &&
-                !pathname.getName().equals("lwjgl-"+internalLwjglVersion+"-merged-modules.jar") &&
+                !pathname.getName().equals("lwjgl-" + internalLwjglVersion + "-merged-modules.jar") &&
                 !pathname.getName().endsWith("lwjglx.jar"));
 
         if (lwjglModules != null) {
             for (File lwjglModule : lwjglModules)
                 launchClasspath.append(lwjglModule.getAbsolutePath()).append(":");
-        } else Log.e("generateLaunchClasspath", "lwjgl modules are missing from components!");
+        } else
+            Log.e("generateLaunchClasspath", "lwjgl modules are missing from components!");
 
         launchClasspath.append(libClasspath).append(":");
         launchClasspath.append(getClientClasspath(actualname));
         // Anything LWJGL2 gets LWJGLX
-        if (iLwjglVersion <= 299) launchClasspath.append(":").append(lwjglxFile);
+        if (iLwjglVersion <= 299)
+            launchClasspath.append(":").append(lwjglxFile);
         return launchClasspath.toString();
     }
 
     public static DisplayMetrics getDisplayMetrics(Activity activity) {
         DisplayMetrics displayMetrics = new DisplayMetrics();
 
-        if(SDK_INT >= Build.VERSION_CODES.N && (activity.isInMultiWindowMode() || activity.isInPictureInPictureMode())){
-            //For devices with free form/split screen, we need window size, not screen size.
+        if (SDK_INT >= Build.VERSION_CODES.N
+                && (activity.isInMultiWindowMode() || activity.isInPictureInPictureMode())) {
+            // For devices with free form/split screen, we need window size, not screen
+            // size.
             displayMetrics = activity.getResources().getDisplayMetrics();
-        }else{
+        } else {
             if (SDK_INT >= Build.VERSION_CODES.R) {
                 activity.getDisplay().getRealMetrics(displayMetrics);
-            } else { // Removed the clause for devices with unofficial notch support, since it also ruins all devices with virtual nav bars before P
+            } else { // Removed the clause for devices with unofficial notch support, since it also
+                     // ruins all devices with virtual nav bars before P
                 activity.getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
             }
-            if(!PREF_IGNORE_NOTCH){
-                //Remove notch width when it isn't ignored.
-                if(activity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
+            if (!PREF_IGNORE_NOTCH) {
+                // Remove notch width when it isn't ignored.
+                if (activity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
                     displayMetrics.heightPixels -= PREF_NOTCH_SIZE;
                 else
                     displayMetrics.widthPixels -= PREF_NOTCH_SIZE;
@@ -961,9 +1037,10 @@ public final class Tools {
         final View decorView = activity.getWindow().getDecorView();
         View.OnSystemUiVisibilityChangeListener visibilityChangeListener = visibility -> {
             boolean multiWindowMode = SDK_INT >= 24 && activity.isInMultiWindowMode();
-            // When in multi-window mode, asking for fullscreen makes no sense (cause the launcher runs in a window)
+            // When in multi-window mode, asking for fullscreen makes no sense (cause the
+            // launcher runs in a window)
             // So, ignore the fullscreen setting when activity is in multi window mode
-            if(fullscreen && !multiWindowMode){
+            if (fullscreen && !multiWindowMode) {
                 if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
                     decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                             | View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -972,13 +1049,18 @@ public final class Tools {
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                             | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
                 }
-            }else{
+            } else {
                 decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
             }
 
         };
         decorView.setOnSystemUiVisibilityChangeListener(visibilityChangeListener);
-        visibilityChangeListener.onSystemUiVisibilityChange(decorView.getSystemUiVisibility()); //call it once since the UI state may not change after the call, so the activity wont become fullscreen
+        visibilityChangeListener.onSystemUiVisibilityChange(decorView.getSystemUiVisibility()); // call it once since
+                                                                                                // the UI state may not
+                                                                                                // change after the
+                                                                                                // call, so the activity
+                                                                                                // wont become
+                                                                                                // fullscreen
     }
 
     public static DisplayMetrics currentDisplayMetrics;
@@ -988,16 +1070,17 @@ public final class Tools {
 
         View dimensionView = activity.findViewById(R.id.dimension_tracker);
 
-        if(dimensionView != null) {
+        if (dimensionView != null) {
             int width = dimensionView.getWidth();
             int height = dimensionView.getHeight();
-            if(width != 0 && height != 0) {
-                Log.i("Tools", "Using dimension_tracker for display dimensions; W="+width+" H="+height);
+            if (width != 0 && height != 0) {
+                Log.i("Tools", "Using dimension_tracker for display dimensions; W=" + width + " H=" + height);
                 CallbackBridge.physicalWidth = width;
                 CallbackBridge.physicalHeight = height;
                 return;
-            }else{
-                Log.e("Tools","Dimension tracker detected but dimensions out of date. Please check usage.", new Exception());
+            } else {
+                Log.e("Tools", "Dimension tracker detected but dimensions out of date. Please check usage.",
+                        new Exception());
             }
         }
 
@@ -1006,26 +1089,28 @@ public final class Tools {
     }
 
     public static float dpToPx(float dp) {
-        //Better hope for the currentDisplayMetrics to be good
+        // Better hope for the currentDisplayMetrics to be good
         return dp * currentDisplayMetrics.density;
     }
 
-    public static float pxToDp(float px){
-        //Better hope for the currentDisplayMetrics to be good
+    public static float pxToDp(float px) {
+        // Better hope for the currentDisplayMetrics to be good
         return px / currentDisplayMetrics.density;
     }
 
-    public static void copyAssetFile(Context ctx, String fileName, String output, boolean overwrite) throws IOException {
+    public static void copyAssetFile(Context ctx, String fileName, String output, boolean overwrite)
+            throws IOException {
         copyAssetFile(ctx, fileName, output, new File(fileName).getName(), overwrite);
     }
 
-    public static void copyAssetFile(Context ctx, String fileName, String output, String outputName, boolean overwrite) throws IOException {
+    public static void copyAssetFile(Context ctx, String fileName, String output, String outputName, boolean overwrite)
+            throws IOException {
         File parentFolder = new File(output);
         FileUtils.ensureDirectory(parentFolder);
         File destinationFile = new File(output, outputName);
-        if(!destinationFile.exists() || overwrite){
-            try(InputStream inputStream = ctx.getAssets().open(fileName)) {
-                try (OutputStream outputStream = new FileOutputStream(destinationFile)){
+        if (!destinationFile.exists() || overwrite) {
+            try (InputStream inputStream = ctx.getAssets().open(fileName)) {
+                try (OutputStream outputStream = new FileOutputStream(destinationFile)) {
                     IOUtils.copy(inputStream, outputStream);
                 }
             }
@@ -1045,23 +1130,28 @@ public final class Tools {
     }
 
     public static void showError(final Context ctx, final Throwable e, final boolean exitIfOk) {
-        showError(ctx, R.string.global_error, null ,e, exitIfOk, false);
+        showError(ctx, R.string.global_error, null, e, exitIfOk, false);
     }
+
     public static void showError(final Context ctx, final int rolledMessage, final Throwable e) {
         showError(ctx, R.string.global_error, ctx.getString(rolledMessage), e, false, false);
     }
+
     public static void showError(final Context ctx, final String rolledMessage, final Throwable e) {
         showError(ctx, R.string.global_error, rolledMessage, e, false, false);
     }
+
     public static void showError(final Context ctx, final String rolledMessage, final Throwable e, boolean exitIfOk) {
         showError(ctx, R.string.global_error, rolledMessage, e, exitIfOk, false);
     }
+
     public static void showError(final Context ctx, final int titleId, final Throwable e, final boolean exitIfOk) {
         showError(ctx, titleId, null, e, exitIfOk, false);
     }
 
-    private static void showError(final Context ctx, final int titleId, final String rolledMessage, final Throwable e, final boolean exitIfOk, final boolean showMore) {
-        if(e instanceof ContextExecutorTask) {
+    private static void showError(final Context ctx, final int titleId, final String rolledMessage, final Throwable e,
+            final boolean exitIfOk, final boolean showMore) {
+        if (e instanceof ContextExecutorTask) {
             ContextExecutor.execute((ContextExecutorTask) e);
             return;
         }
@@ -1073,7 +1163,7 @@ public final class Tools {
                     .setTitle(titleId)
                     .setMessage(errMsg)
                     .setPositiveButton(android.R.string.ok, (p1, p2) -> {
-                        if(exitIfOk) {
+                        if (exitIfOk) {
                             if (ctx instanceof MainActivity) {
                                 fullyExit();
                             } else if (ctx instanceof Activity) {
@@ -1081,11 +1171,12 @@ public final class Tools {
                             }
                         }
                     })
-                    .setNegativeButton(showMore ? R.string.error_show_less : R.string.error_show_more, (p1, p2) -> showError(ctx, titleId, rolledMessage, e, exitIfOk, !showMore))
+                    .setNegativeButton(showMore ? R.string.error_show_less : R.string.error_show_more,
+                            (p1, p2) -> showError(ctx, titleId, rolledMessage, e, exitIfOk, !showMore))
                     .setNeutralButton(android.R.string.copy, (p1, p2) -> {
                         ClipboardManager mgr = (ClipboardManager) ctx.getSystemService(Context.CLIPBOARD_SERVICE);
                         mgr.setPrimaryClip(ClipData.newPlainText("error", printToString(e)));
-                        if(exitIfOk) {
+                        if (exitIfOk) {
                             if (ctx instanceof MainActivity) {
                                 fullyExit();
                             } else {
@@ -1109,33 +1200,38 @@ public final class Tools {
     }
 
     /**
-     * Show the error remotely in a context-aware fashion. Has generally the same behaviour as
-     * Tools.showError when in an activity, but when not in one, sends a notification that opens an
+     * Show the error remotely in a context-aware fashion. Has generally the same
+     * behaviour as
+     * Tools.showError when in an activity, but when not in one, sends a
+     * notification that opens an
      * activity and calls Tools.showError().
      * NOTE: If the Throwable is a ContextExecutorTask and when not in an activity,
      * its executeWithApplication() method will never be called.
+     * 
      * @param e the error (throwable)
      */
     public static void showErrorRemote(Throwable e) {
         showErrorRemote(null, e);
     }
+
     public static void showErrorRemote(Context context, int rolledMessage, Throwable e) {
         showErrorRemote(context.getString(rolledMessage), e);
     }
+
     public static void showErrorRemote(String rolledMessage, Throwable e) {
         // I WILL embrace layer violations because Android's concept of layers is STUPID
-        // We live in the same process anyway, why make it any more harder with this needless
+        // We live in the same process anyway, why make it any more harder with this
+        // needless
         // abstraction?
 
         // Add your Context-related rage here
         ContextExecutor.execute(new ShowErrorActivity.RemoteErrorTask(e, rolledMessage));
     }
 
-
-
     public static void dialogOnUiThread(final Activity activity, final CharSequence title, final CharSequence message) {
-        activity.runOnUiThread(()->dialog(activity, title, message));
+        activity.runOnUiThread(() -> dialog(activity, title, message));
     }
+
     public static void dialogOnUiThread(final Activity activity, final int title, final int message) {
         dialogOnUiThread(activity, activity.getString(title), activity.getString(message));
     }
@@ -1154,10 +1250,11 @@ public final class Tools {
     }
 
     private static boolean checkRules(JMinecraftVersionList.Arguments.ArgValue.ArgRules[] rules) {
-        if(rules == null) return true; // always allow
+        if (rules == null)
+            return true; // always allow
         for (JMinecraftVersionList.Arguments.ArgValue.ArgRules rule : rules) {
             if (rule.action.equals("allow") && rule.os != null && rule.os.name.equals("osx")) {
-                return false; //disallow
+                return false; // disallow
             }
         }
         return true; // allow if none match
@@ -1170,7 +1267,8 @@ public final class Tools {
             if (libItem.name.startsWith("net.java.dev.jna:jna:")) {
                 // Special handling for LabyMod 1.8.9, Forge 1.12.2(?) and oshi
                 // we have libjnidispatch 5.13.0 in jniLibs directory
-                if (Integer.parseInt(version[0]) >= 5 && Integer.parseInt(version[1]) >= 13) continue;
+                if (Integer.parseInt(version[0]) >= 5 && Integer.parseInt(version[1]) >= 13)
+                    continue;
                 Log.d(APP_NAME, "Library " + libItem.name + " has been changed to version 5.13.0");
                 createLibraryInfo(libItem);
                 libItem.name = "net.java.dev.jna:jna:5.13.0";
@@ -1178,10 +1276,12 @@ public final class Tools {
                 libItem.downloads.artifact.sha1 = "1200e7ebeedbe0d10062093f32925a912020e747";
                 libItem.downloads.artifact.url = "https://repo1.maven.org/maven2/net/java/dev/jna/jna/5.13.0/jna-5.13.0.jar";
             } else if (libItem.name.startsWith("com.github.oshi:oshi-core:")) {
-                //if (Integer.parseInt(version[0]) >= 6 && Integer.parseInt(version[1]) >= 3) return;
+                // if (Integer.parseInt(version[0]) >= 6 && Integer.parseInt(version[1]) >= 3)
+                // return;
                 // FIXME: ensure compatibility
 
-                if (Integer.parseInt(version[0]) != 6 || Integer.parseInt(version[1]) != 2) continue;
+                if (Integer.parseInt(version[0]) != 6 || Integer.parseInt(version[1]) != 2)
+                    continue;
                 Log.d(APP_NAME, "Library " + libItem.name + " has been changed to version 6.3.0");
                 createLibraryInfo(libItem);
                 libItem.name = "com.github.oshi:oshi-core:6.3.0";
@@ -1189,10 +1289,14 @@ public final class Tools {
                 libItem.downloads.artifact.sha1 = "9e98cf55be371cafdb9c70c35d04ec2a8c2b42ac";
                 libItem.downloads.artifact.url = "https://repo1.maven.org/maven2/com/github/oshi/oshi-core/6.3.0/oshi-core-6.3.0.jar";
             } else if (libItem.name.startsWith("org.ow2.asm:asm-all:")) {
-                // Early versions of the ASM library get repalced with 5.0.4 because Pojav's LWJGL is compiled for
-                // Java 8, which is not supported by old ASM versions. Mod loaders like Forge, which depend on this
-                // library, often include lwjgl in their class transformations, which causes errors with old ASM versions.
-                if(Integer.parseInt(version[0]) >= 5) continue;
+                // Early versions of the ASM library get repalced with 5.0.4 because Pojav's
+                // LWJGL is compiled for
+                // Java 8, which is not supported by old ASM versions. Mod loaders like Forge,
+                // which depend on this
+                // library, often include lwjgl in their class transformations, which causes
+                // errors with old ASM versions.
+                if (Integer.parseInt(version[0]) >= 5)
+                    continue;
                 Log.d(APP_NAME, "Library " + libItem.name + " has been changed to version 5.0.4");
                 createLibraryInfo(libItem);
                 libItem.name = "org.ow2.asm:asm-all:5.0.4";
@@ -1205,16 +1309,16 @@ public final class Tools {
     }
 
     private static void createLibraryInfo(DependentLibrary library) {
-        if(library.downloads == null || library.downloads.artifact == null)
+        if (library.downloads == null || library.downloads.artifact == null)
             library.downloads = new DependentLibrary.LibraryDownloads(new MinecraftLibraryArtifact());
     }
 
     public static String[] generateLibClasspath(JMinecraftVersionList.Version info) {
         List<String> libDir = new ArrayList<>();
-        for (DependentLibrary libItem: info.libraries) {
+        for (DependentLibrary libItem : info.libraries) {
             // Look for LWJGL version
             int libItemVersionStringOffset = 0;
-            if(libItem.name.startsWith("org.lwjgl.lwjgl:lwjgl:")) {
+            if (libItem.name.startsWith("org.lwjgl.lwjgl:lwjgl:")) {
                 libItemVersionStringOffset = "org.lwjgl.lwjgl:lwjgl:".length();
             } else if (libItem.name.startsWith("org.lwjgl:lwjgl:")) {
                 libItemVersionStringOffset = "org.lwjgl:lwjgl:".length();
@@ -1239,19 +1343,25 @@ public final class Tools {
                 Log.d(APP_NAME, "Ignored non-exists file: " + libPath);
                 continue;
             }
-            if(!checkRules(libItem.rules)) continue;
+            if (!checkRules(libItem.rules))
+                continue;
             libDir.add(libPath);
-            // Mitigation: Babric doesn't use asm-all for some reason so it does a classpath conflict
-            if (libItem.name.startsWith("org.ow2.asm:asm") && !libItem.name.startsWith("org.ow2.asm:asm-all:")){
-                libDir.remove(Tools.DIR_HOME_LIBRARY + "/" + artifactToPath(new DependentLibrary(){{
-                    name = "org.ow2.asm:asm-all:5.0.4";
-                }} ));
+            // Mitigation: Babric doesn't use asm-all for some reason so it does a classpath
+            // conflict
+            if (libItem.name.startsWith("org.ow2.asm:asm") && !libItem.name.startsWith("org.ow2.asm:asm-all:")) {
+                libDir.remove(Tools.DIR_HOME_LIBRARY + "/" + artifactToPath(new DependentLibrary() {
+                    {
+                        name = "org.ow2.asm:asm-all:5.0.4";
+                    }
+                }));
             }
         }
         // Scary message, but we aren't getting LWJGL 1.9.9 or 3.10.100 any time soon
-        if (iLwjglVersion < 200 || iLwjglVersion > 999) throw new RuntimeException("Unable to determine LWJGL version, JSON may be corrupt.");
+        if (iLwjglVersion < 200 || iLwjglVersion > 999)
+            throw new RuntimeException("Unable to determine LWJGL version, JSON may be corrupt.");
         sLwjglVersion = iLwjglVersion >= 341 ? "3.4.1" : "3.3.3";
-        lwjglNativesDir = String.format("%s/lwjgl-%s-natives/%s", Tools.DIR_DATA, sLwjglVersion, archAsStringAndroid(getDeviceArchitecture()));
+        lwjglNativesDir = String.format("%s/lwjgl-%s-natives/%s", Tools.DIR_DATA, sLwjglVersion,
+                archAsStringAndroid(getDeviceArchitecture()));
         return libDir.toArray(new String[0]);
     }
 
@@ -1259,38 +1369,41 @@ public final class Tools {
         return getVersionInfo(versionName, false);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public static JMinecraftVersionList.Version getVersionInfo(String versionName, boolean skipInheriting) {
         try {
-            JMinecraftVersionList.Version customVer = Tools.GLOBAL_GSON.fromJson(read(DIR_HOME_VERSION + "/" + versionName + "/" + versionName + ".json"), JMinecraftVersionList.Version.class);
+            JMinecraftVersionList.Version customVer = Tools.GLOBAL_GSON.fromJson(
+                    read(DIR_HOME_VERSION + "/" + versionName + "/" + versionName + ".json"),
+                    JMinecraftVersionList.Version.class);
             if (skipInheriting || customVer.inheritsFrom == null || customVer.inheritsFrom.equals(customVer.id)) {
                 preProcessLibraries(customVer.libraries);
             } else {
                 JMinecraftVersionList.Version inheritsVer;
-                //If it won't download, just search for it
-                try{
-                    inheritsVer = Tools.GLOBAL_GSON.fromJson(read(DIR_HOME_VERSION + "/" + customVer.inheritsFrom + "/" + customVer.inheritsFrom + ".json"), JMinecraftVersionList.Version.class);
-                }catch(IOException e) {
-                    throw new RuntimeException("Can't find the source version for "+ versionName +" (req version="+customVer.inheritsFrom+")");
+                // If it won't download, just search for it
+                try {
+                    inheritsVer = Tools.GLOBAL_GSON.fromJson(read(
+                            DIR_HOME_VERSION + "/" + customVer.inheritsFrom + "/" + customVer.inheritsFrom + ".json"),
+                            JMinecraftVersionList.Version.class);
+                } catch (IOException e) {
+                    throw new RuntimeException("Can't find the source version for " + versionName + " (req version="
+                            + customVer.inheritsFrom + ")");
                 }
-                //inheritsVer.inheritsFrom = inheritsVer.id;
+                // inheritsVer.inheritsFrom = inheritsVer.id;
                 insertSafety(inheritsVer, customVer,
                         "assetIndex", "assets", "id",
                         "mainClass", "minecraftArguments",
-                        "releaseTime", "time", "type", "inheritsFrom"
-                );
+                        "releaseTime", "time", "type", "inheritsFrom");
 
                 // Go through the libraries, remove the ones overridden by the custom version
                 List<DependentLibrary> inheritLibraryList = new ArrayList<>(Arrays.asList(inheritsVer.libraries));
-                outer_loop:
-                for(DependentLibrary library : customVer.libraries){
+                outer_loop: for (DependentLibrary library : customVer.libraries) {
                     // Clean libraries overridden by the custom version
                     String libName = library.name.substring(0, library.name.lastIndexOf(":"));
 
-                    for(DependentLibrary inheritLibrary : inheritLibraryList) {
+                    for (DependentLibrary inheritLibrary : inheritLibraryList) {
                         String inheritLibName = inheritLibrary.name.substring(0, inheritLibrary.name.lastIndexOf(":"));
 
-                        if(libName.equals(inheritLibName)){
+                        if (libName.equals(inheritLibName)) {
                             Log.d(APP_NAME, "Library " + libName + ": Replaced version " +
                                     libName.substring(libName.lastIndexOf(":") + 1) + " with " +
                                     inheritLibName.substring(inheritLibName.lastIndexOf(":") + 1));
@@ -1306,7 +1419,6 @@ public final class Tools {
                 inheritLibraryList.addAll(Arrays.asList(customVer.libraries));
                 inheritsVer.libraries = inheritLibraryList.toArray(new DependentLibrary[0]);
                 preProcessLibraries(inheritsVer.libraries);
-
 
                 // Inheriting Minecraft 1.13+ with append custom args
                 if (inheritsVer.arguments != null && customVer.arguments != null) {
@@ -1357,7 +1469,8 @@ public final class Tools {
     }
 
     // Prevent NullPointerException
-    private static void insertSafety(JMinecraftVersionList.Version targetVer, JMinecraftVersionList.Version fromVer, String... keyArr) {
+    private static void insertSafety(JMinecraftVersionList.Version targetVer, JMinecraftVersionList.Version fromVer,
+            String... keyArr) {
         for (String key : keyArr) {
             Object value = null;
             try {
@@ -1390,7 +1503,7 @@ public final class Tools {
     public static void write(String path, String content) throws IOException {
         File file = new File(path);
         FileUtils.ensureParentDirectory(file);
-        try(FileOutputStream outStream = new FileOutputStream(file)) {
+        try (FileOutputStream outStream = new FileOutputStream(file)) {
             IOUtils.write(content, outStream);
         }
     }
@@ -1411,20 +1524,20 @@ public final class Tools {
     public static void printLauncherInfo(String gameVersion, String javaArguments, int deviceRam) {
         Logger.appendToLog("Info: Launcher version: " + BuildConfig.VERSION_NAME);
         Logger.appendToLog("Info: Architecture: " + Architecture.archAsString(DEVICE_ARCHITECTURE));
-        Logger.appendToLog("Info: Device model: " + Build.MANUFACTURER + " " +Build.MODEL);
+        Logger.appendToLog("Info: Device model: " + Build.MANUFACTURER + " " + Build.MODEL);
         Logger.appendToLog(String.format("Info: Total RAM: %s MB", deviceRam != 0 ? deviceRam : "unavailable"));
         Logger.appendToLog("Info: Allocated RAM: " + LauncherPreferences.PREF_RAM_ALLOCATION + "MB");
         Logger.appendToLog("Info: API version: " + SDK_INT);
         Logger.appendToLog("Info: Selected Minecraft version: " + gameVersion);
         Logger.appendToLog("Info: Custom Java arguments: \"" + javaArguments + "\"");
         GLInfoUtils.GLInfo info = GLInfoUtils.getGlInfo();
-        Logger.appendToLog("Info: Graphics device: "+info.vendor+ " "+info.renderer+" (OpenGL ES "+info.glesMajorVersion+")");
+        Logger.appendToLog("Info: Graphics device: " + info.vendor + " " + info.renderer + " (OpenGL ES "
+                + info.glesMajorVersion + ")");
     }
 
     public interface DownloaderFeedback {
         void updateProgress(int curr, int max);
     }
-
 
     public static boolean compareSHA1(File f, String sourceSHA) {
         try {
@@ -1432,82 +1545,90 @@ public final class Tools {
             try (InputStream is = new FileInputStream(f)) {
                 sha1_dst = new String(Hex.encodeHex(org.apache.commons.codec.digest.DigestUtils.sha1(is)));
             }
-            if(sourceSHA != null) {
+            if (sourceSHA != null) {
                 return sha1_dst.equalsIgnoreCase(sourceSHA);
-            } else{
+            } else {
                 return true; // fake match
             }
-        }catch (IOException e) {
-            Log.i("SHA1","Fake-matching a hash due to a read error",e);
+        } catch (IOException e) {
+            Log.i("SHA1", "Fake-matching a hash due to a read error", e);
             return true;
         }
     }
 
-    public static void ignoreNotch(boolean shouldIgnore, Activity ctx){
+    public static void ignoreNotch(boolean shouldIgnore, Activity ctx) {
         if (SDK_INT >= P) {
             if (shouldIgnore) {
-                ctx.getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+                ctx.getWindow()
+                        .getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
             } else {
-                ctx.getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
+                ctx.getWindow()
+                        .getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
             }
-            ctx.getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
+            ctx.getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
             Tools.updateWindowSize(ctx);
         }
     }
 
-    public static int getTotalDeviceMemory(Context ctx){
+    public static int getTotalDeviceMemory(Context ctx) {
         ActivityManager actManager = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
         actManager.getMemoryInfo(memInfo);
         return (int) (memInfo.totalMem / 1048576L);
     }
 
-    public static int getFreeDeviceMemory(Context ctx){
+    public static int getFreeDeviceMemory(Context ctx) {
         ActivityManager actManager = (ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
         ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
         actManager.getMemoryInfo(memInfo);
         return (int) (memInfo.availMem / 1048576L);
     }
 
-    private static int internalGetMaxContinuousAddressSpaceSize() throws Exception{
+    private static int internalGetMaxContinuousAddressSpaceSize() throws Exception {
         MemoryHoleFinder memoryHoleFinder = new MemoryHoleFinder();
         new SelfMapsParser(memoryHoleFinder).run();
         long largestHole = memoryHoleFinder.getLargestHole();
-        if(largestHole == -1) return -1;
-        else return (int)(largestHole / 1048576L);
+        if (largestHole == -1)
+            return -1;
+        else
+            return (int) (largestHole / 1048576L);
     }
 
     public static int getMaxContinuousAddressSpaceSize() {
         try {
             return internalGetMaxContinuousAddressSpaceSize();
-        }catch (Exception e){
+        } catch (Exception e) {
             Log.w("Tools", "Failed to find the largest uninterrupted address space");
             return -1;
         }
     }
 
-    public static int getDisplayFriendlyRes(int displaySideRes, float scaling){
+    public static int getDisplayFriendlyRes(int displaySideRes, float scaling) {
         displaySideRes *= scaling;
-        if(displaySideRes % 2 != 0) displaySideRes --;
+        if (displaySideRes % 2 != 0)
+            displaySideRes--;
         return displaySideRes;
     }
 
     public static String getFileName(Context ctx, Uri uri) {
         Cursor c = ctx.getContentResolver().query(uri, null, null, null, null);
-        if(c == null) return uri.getLastPathSegment(); // idk myself but it happens on asus file manager
+        if (c == null)
+            return uri.getLastPathSegment(); // idk myself but it happens on asus file manager
         c.moveToFirst();
         int columnIndex = c.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-        if(columnIndex == -1) return uri.getLastPathSegment();
+        if (columnIndex == -1)
+            return uri.getLastPathSegment();
         String fileName = c.getString(columnIndex);
         c.close();
         return fileName;
     }
 
     /** Swap the main fragment with another */
-    public static void swapFragment(FragmentActivity fragmentActivity , Class<? extends Fragment> fragmentClass,
-                                    @Nullable String fragmentTag, @Nullable Bundle bundle) {
+    public static void swapFragment(FragmentActivity fragmentActivity, Class<? extends Fragment> fragmentClass,
+            @Nullable String fragmentTag, @Nullable Bundle bundle) {
         // When people tab out, it might happen
-        //TODO handle custom animations
+        // TODO handle custom animations
         fragmentActivity.getSupportFragmentManager().beginTransaction()
                 .setReorderingAllowed(true)
                 .addToBackStack(fragmentClass.getName())
@@ -1520,7 +1641,7 @@ public final class Tools {
     }
 
     /** Remove the current fragment */
-    public static void removeCurrentFragment(FragmentActivity fragmentActivity){
+    public static void removeCurrentFragment(FragmentActivity fragmentActivity) {
         fragmentActivity.getSupportFragmentManager().popBackStack();
     }
 
@@ -1530,10 +1651,10 @@ public final class Tools {
             return;
         }
 
-        if(!customJavaArgs){ // Launch the intent to get the jar file
-            if(!(activity instanceof LauncherActivity))
+        if (!customJavaArgs) { // Launch the intent to get the jar file
+            if (!(activity instanceof LauncherActivity))
                 throw new IllegalStateException("Cannot start Mod Installer without LauncherActivity");
-            LauncherActivity launcherActivity = (LauncherActivity)activity;
+            LauncherActivity launcherActivity = (LauncherActivity) activity;
             launcherActivity.modInstallerLauncher.launch(null);
             return;
         }
@@ -1556,7 +1677,7 @@ public final class Tools {
     }
 
     /** Display and return a progress dialog, instructing to wait */
-    public static ProgressDialog getWaitingDialog(Context ctx, int message){
+    public static ProgressDialog getWaitingDialog(Context ctx, int message) {
         final ProgressDialog barrier = new ProgressDialog(ctx);
         barrier.setMessage(ctx.getString(message));
         barrier.setProgressStyle(ProgressDialog.STYLE_SPINNER);
@@ -1566,17 +1687,18 @@ public final class Tools {
         return barrier;
     }
 
-    /** Launch the mod installer activity. The Uri must be from our own content provider or
+    /**
+     * Launch the mod installer activity. The Uri must be from our own content
+     * provider or
      * from ACTION_OPEN_DOCUMENT
      */
-    public static void launchModInstaller(Activity activity, @NonNull Uri uri){
+    public static void launchModInstaller(Activity activity, @NonNull Uri uri) {
         Intent intent = new Intent(activity, JavaGUILauncherActivity.class);
         intent.putExtra("modUri", uri);
         activity.startActivity(intent);
     }
 
-
-    public static void installRuntimeFromUri(Context context, Uri uri){
+    public static void installRuntimeFromUri(Context context, Uri uri) {
         sExecutorService.execute(() -> {
             try {
                 String name = getFileName(context, uri);
@@ -1594,10 +1716,12 @@ public final class Tools {
 
     public static String extractUntilCharacter(String input, String whatFor, char terminator) {
         int whatForStart = input.indexOf(whatFor);
-        if(whatForStart == -1) return null;
+        if (whatForStart == -1)
+            return null;
         whatForStart += whatFor.length();
         int terminatorIndex = input.indexOf(terminator, whatForStart);
-        if(terminatorIndex == -1) return null;
+        if (terminatorIndex == -1)
+            return null;
         return input.substring(whatForStart, terminatorIndex);
     }
 
@@ -1606,16 +1730,18 @@ public final class Tools {
     }
 
     public static String getRuntimeName(String prefixedName) {
-        if(prefixedName == null) return prefixedName;
-        if(!prefixedName.startsWith(Tools.LAUNCHERPROFILES_RTPREFIX)) return null;
+        if (prefixedName == null)
+            return prefixedName;
+        if (!prefixedName.startsWith(Tools.LAUNCHERPROFILES_RTPREFIX))
+            return null;
         return prefixedName.substring(Tools.LAUNCHERPROFILES_RTPREFIX.length());
     }
 
     public static String getSelectedRuntime(MinecraftProfile minecraftProfile) {
         String runtime = LauncherPreferences.PREF_DEFAULT_RUNTIME;
         String profileRuntime = getRuntimeName(minecraftProfile.javaDir);
-        if(profileRuntime != null) {
-            if(MultiRTUtils.forceReread(profileRuntime).versionString != null) {
+        if (profileRuntime != null) {
+            if (MultiRTUtils.forceReread(profileRuntime).versionString != null) {
                 runtime = profileRuntime;
             }
         }
@@ -1630,59 +1756,68 @@ public final class Tools {
         String runtime = getSelectedRuntime(minecraftProfile);
         String profileRuntime = getRuntimeName(minecraftProfile.javaDir);
         Runtime pickedRuntime = MultiRTUtils.read(runtime);
-        if(runtime == null || pickedRuntime.javaVersion == 0 || pickedRuntime.javaVersion < targetJavaVersion) {
+        if (runtime == null || pickedRuntime.javaVersion == 0 || pickedRuntime.javaVersion < targetJavaVersion) {
             String preferredRuntime = MultiRTUtils.getNearestJreName(targetJavaVersion);
-            if(preferredRuntime == null) throw new RuntimeException("Failed to autopick runtime!");
-            if(profileRuntime != null) minecraftProfile.javaDir = Tools.LAUNCHERPROFILES_RTPREFIX+preferredRuntime;
+            if (preferredRuntime == null)
+                throw new RuntimeException("Failed to autopick runtime!");
+            if (profileRuntime != null)
+                minecraftProfile.javaDir = Tools.LAUNCHERPROFILES_RTPREFIX + preferredRuntime;
             runtime = preferredRuntime;
         }
         return runtime;
     }
 
     /** Triggers the share intent chooser, with the latestlog file attached to it */
-    public static void shareLog(Context context){
+    public static void shareLog(Context context) {
         openPath(context, new File(Tools.DIR_GAME_HOME, "latestlog.txt"), true);
     }
 
     /**
      * Determine the MIME type of a File.
+     * 
      * @param file The file to determine the type of
      * @return the type, or the default value *slash* if cannot be determined
      */
     public static String getMimeType(File file) {
-        if(file.isDirectory()) return DocumentsContract.Document.MIME_TYPE_DIR;
+        if (file.isDirectory())
+            return DocumentsContract.Document.MIME_TYPE_DIR;
         String mimeType = null;
-        try (FileInputStream fileInputStream = new FileInputStream(file)){
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
             // Theoretically we don't even need the buffer since we don't care about the
             // contents of the file after the guess, but mark-supported streams
             // are a requirement of URLConnection.guessContentTypeFromStream()
-            try(BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream)) {
+            try (BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream)) {
                 mimeType = URLConnection.guessContentTypeFromStream(bufferedInputStream);
             }
-        }catch (IOException e) {
+        } catch (IOException e) {
             Log.w("FileMimeType", "Failed to determine MIME type by stream", e);
         }
-        if(mimeType != null) return mimeType;
+        if (mimeType != null)
+            return mimeType;
         mimeType = URLConnection.guessContentTypeFromName(file.getName());
-        if(mimeType != null) return mimeType;
+        if (mimeType != null)
+            return mimeType;
         return "*/*";
     }
 
     /**
-     * Open the path specified by a File in a file explorer or in a relevant application.
+     * Open the path specified by a File in a file explorer or in a relevant
+     * application.
+     * 
      * @param context the current Context
-     * @param file the File to open
-     * @param share whether to open a "Share" or an "Open" dialog.
+     * @param file    the File to open
+     * @param share   whether to open a "Share" or an "Open" dialog.
      */
     public static void openPath(Context context, File file, boolean share) {
-        Uri contentUri = DocumentsContract.buildDocumentUri(context.getString(R.string.storageProviderAuthorities), file.getAbsolutePath());
+        Uri contentUri = DocumentsContract.buildDocumentUri(context.getString(R.string.storageProviderAuthorities),
+                file.getAbsolutePath());
         String mimeType = getMimeType(file);
         Intent intent = new Intent();
-        if(share) {
+        if (share) {
             intent.setAction(Intent.ACTION_SEND);
             intent.setType(getMimeType(file));
             intent.putExtra(Intent.EXTRA_STREAM, contentUri);
-        }else {
+        } else {
             intent.setAction(Intent.ACTION_VIEW);
             intent.setDataAndType(contentUri, mimeType);
         }
@@ -1701,19 +1836,27 @@ public final class Tools {
     }
 
     /**
-     * Check if the device is one of the devices that may be affected by the hanging linker issue.
-     * The device is affected if the linker causes the process to lock up when dlopen() is called within
+     * Check if the device is one of the devices that may be affected by the hanging
+     * linker issue.
+     * The device is affected if the linker causes the process to lock up when
+     * dlopen() is called within
      * dl_iterate_phdr().
-     * For now, the only affected firmware that I know of is Android 5.1, EMUI 3.1 on MTK-based Huawei
+     * For now, the only affected firmware that I know of is Android 5.1, EMUI 3.1
+     * on MTK-based Huawei
      * devices.
+     * 
      * @return if the device is affected by the hanging linker issue.
      */
     public static boolean deviceHasHangingLinker() {
-        // Android Oreo and onwards have GSIs and most phone firmwares at that point were not modified
+        // Android Oreo and onwards have GSIs and most phone firmwares at that point
+        // were not modified
         // *that* intrusively. So assume that we are not affected.
-        if(SDK_INT >= Build.VERSION_CODES.O) return false;
-        // Since the affected function in LWJGL is rarely used (and when used, it's mainly for debug prints)
-        // we can make the search scope a bit more broad and check if we are running on a Huawei device.
+        if (SDK_INT >= Build.VERSION_CODES.O)
+            return false;
+        // Since the affected function in LWJGL is rarely used (and when used, it's
+        // mainly for debug prints)
+        // we can make the search scope a bit more broad and check if we are running on
+        // a Huawei device.
         return Build.MANUFACTURER.toLowerCase(Locale.ROOT).contains("huawei");
     }
 
@@ -1728,7 +1871,7 @@ public final class Tools {
     }
 
     public static boolean checkVulkanSupport(PackageManager packageManager) {
-        if(SDK_INT >= Build.VERSION_CODES.N) {
+        if (SDK_INT >= Build.VERSION_CODES.N) {
             return packageManager.hasSystemFeature(PackageManager.FEATURE_VULKAN_HARDWARE_LEVEL) &&
                     packageManager.hasSystemFeature(PackageManager.FEATURE_VULKAN_HARDWARE_VERSION);
         }
@@ -1736,13 +1879,15 @@ public final class Tools {
     }
 
     public static <T> T getWeakReference(WeakReference<T> weakReference) {
-        if(weakReference == null) return null;
+        if (weakReference == null)
+            return null;
         return weakReference.get();
     }
 
     /** Return the renderers that are compatible with this device */
     public static RenderersList getCompatibleRenderers(Context context) {
-        if(sCompatibleRenderers != null) return sCompatibleRenderers;
+        if (sCompatibleRenderers != null)
+            return sCompatibleRenderers;
         Resources resources = context.getResources();
         String[] defaultRenderers = resources.getStringArray(R.array.renderer_values);
         String[] defaultRendererNames = resources.getStringArray(R.array.renderer);
@@ -1754,11 +1899,14 @@ public final class Tools {
         boolean appHasLtw = new File(Tools.NATIVE_LIB_DIR, "libltw.so").exists();
         List<String> rendererIds = new ArrayList<>(defaultRenderers.length);
         List<String> rendererNames = new ArrayList<>(defaultRendererNames.length);
-        for(int i = 0; i < defaultRenderers.length; i++) {
+        for (int i = 0; i < defaultRenderers.length; i++) {
             String rendererId = defaultRenderers[i];
-            if(rendererId.contains("vulkan") && !deviceHasVulkan) continue;
-            if(rendererId.contains("vulkan_zink") && !deviceHasOSMesaZinkBinary) continue;
-            if(rendererId.contains("ltw") && (!deviceHasOpenGLES3 || !appHasLtw)) continue;
+            if (rendererId.contains("vulkan") && !deviceHasVulkan)
+                continue;
+            if (rendererId.contains("vulkan_zink") && !deviceHasOSMesaZinkBinary)
+                continue;
+            if (rendererId.contains("ltw") && (!deviceHasOpenGLES3 || !appHasLtw))
+                continue;
             rendererIds.add(rendererId);
             rendererNames.add(defaultRendererNames[i]);
         }
@@ -1770,7 +1918,7 @@ public final class Tools {
 
     /** Checks if the renderer Id is compatible with the current device */
     public static boolean checkRendererCompatible(Context context, String rendererName) {
-         return getCompatibleRenderers(context).rendererIds.contains(rendererName);
+        return getCompatibleRenderers(context).rendererIds.contains(rendererName);
     }
 
     /** Releases the cache of compatible renderers. */
@@ -1780,7 +1928,8 @@ public final class Tools {
     }
 
     public static boolean deviceSupportsGyro(@NonNull Context context) {
-        return ((SensorManager)context.getSystemService(Context.SENSOR_SERVICE)).getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null;
+        return ((SensorManager) context.getSystemService(Context.SENSOR_SERVICE))
+                .getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null;
 
     }
 
@@ -1797,8 +1946,8 @@ public final class Tools {
                 }).show();
     }
 
-    public static void switchDemo(boolean isDemo){
-        if(isDemo) {
+    public static void switchDemo(boolean isDemo) {
+        if (isDemo) {
             DIR_GAME_NEW = DIR_DATA + "/demo/.minecraft";
         } else {
             DIR_GAME_NEW = DIR_GAME_HOME + "/.minecraft";
@@ -1817,20 +1966,22 @@ public final class Tools {
 
     public static boolean isOnline(Context ctx) {
         NetworkInfo info = getActiveNetworkInfo(ctx);
-        if(info == null) return false;
+        if (info == null)
+            return false;
         return (info.isConnected());
     }
 
-    public static boolean isDemoProfile(Context ctx){
+    public static boolean isDemoProfile(Context ctx) {
         MinecraftAccount currentProfile = PojavProfile.getCurrentProfileContent(ctx, null);
         return currentProfile != null && currentProfile.isDemo();
     }
 
-    public static boolean isLocalProfile(Context ctx){
+    public static boolean isLocalProfile(Context ctx) {
         MinecraftAccount currentProfile = PojavProfile.getCurrentProfileContent(ctx, null);
         return currentProfile == null || currentProfile.isLocal();
     }
-    public static boolean hasOnlineProfile(){
+
+    public static boolean hasOnlineProfile() {
         for (MinecraftAccount accountToCheck : getAllProfiles()) {
             if (!accountToCheck.isLocal() && !accountToCheck.isDemo()) {
                 return true;
@@ -1839,64 +1990,73 @@ public final class Tools {
         return false;
     }
 
-    public static void hasNoOnlineProfileDialog(Activity activity, @Nullable Runnable run, @Nullable String customTitle, @Nullable String customMessage){
-        if (hasOnlineProfile() && !Tools.isDemoProfile(activity)){
+    public static void hasNoOnlineProfileDialog(Activity activity, @Nullable Runnable run, @Nullable String customTitle,
+            @Nullable String customMessage) {
+        if (hasOnlineProfile() && !Tools.isDemoProfile(activity)) {
             if (run != null) { // Demo profile handling should be using customTitle and customMessage
                 run.run();
             }
         } else { // If there is no online profile, show a dialog
             customTitle = customTitle == null ? activity.getString(R.string.no_minecraft_account_found) : customTitle;
-            customMessage = customMessage == null ? activity.getString(R.string.feature_requires_java_account) : customMessage;
+            customMessage = customMessage == null ? activity.getString(R.string.feature_requires_java_account)
+                    : customMessage;
             dialogOnUiThread(activity, customTitle, customMessage);
         }
     }
 
     // Some boilerplate to reduce boilerplate elsewhere
-    public static void hasNoOnlineProfileDialog(Activity activity){
+    public static void hasNoOnlineProfileDialog(Activity activity) {
         hasNoOnlineProfileDialog(activity, null, null, null);
     }
-    public static void hasNoOnlineProfileDialog(Activity activity, Runnable run){
+
+    public static void hasNoOnlineProfileDialog(Activity activity, Runnable run) {
         hasNoOnlineProfileDialog(activity, run, null, null);
     }
-    public static void hasNoOnlineProfileDialog(Activity activity, String customTitle, String customMessage){
+
+    public static void hasNoOnlineProfileDialog(Activity activity, String customTitle, String customMessage) {
         hasNoOnlineProfileDialog(activity, null, customTitle, customMessage);
     }
 
-    public static String getSelectedVanillaMcVer(){
-        String selectedProfile = LauncherPreferences.DEFAULT_PREF.getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, "");
+    public static String getSelectedVanillaMcVer() {
+        String selectedProfile = LauncherPreferences.DEFAULT_PREF
+                .getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, "");
         MinecraftProfile selected = LauncherProfiles.mainProfileJson.profiles.get(selectedProfile);
         if (selected == null) { // This should NEVER happen.
             throw new RuntimeException("No profile selected, how did you reach this? Go ask in the discord or github");
         }
         String currentMCVersion = selected.lastVersionId;
         String vanillaVersion = currentMCVersion;
-        File providedJsonFile = new File(Tools.DIR_HOME_VERSION + "/" + currentMCVersion + "/" + currentMCVersion + ".json");
+        File providedJsonFile = new File(
+                Tools.DIR_HOME_VERSION + "/" + currentMCVersion + "/" + currentMCVersion + ".json");
         JMinecraftVersionList.Version providedJsonVersion = null;
         try {
-            providedJsonVersion = Tools.GLOBAL_GSON.fromJson(Tools.read(providedJsonFile.getAbsolutePath()), JMinecraftVersionList.Version.class);
+            providedJsonVersion = Tools.GLOBAL_GSON.fromJson(Tools.read(providedJsonFile.getAbsolutePath()),
+                    JMinecraftVersionList.Version.class);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         try {
-            vanillaVersion = providedJsonVersion.inheritsFrom != null ? providedJsonVersion.inheritsFrom : vanillaVersion;
+            vanillaVersion = providedJsonVersion.inheritsFrom != null ? providedJsonVersion.inheritsFrom
+                    : vanillaVersion;
         } catch (NullPointerException e) {
             throw new RuntimeException(e);
         }
         return vanillaVersion;
     }
 
-    public static Integer mcVersiontoInt(String mcVersion){
+    public static Integer mcVersiontoInt(String mcVersion) {
         String[] sVersionArray = mcVersion.split("\\.");
         String[] iVersionArray = new String[3];
         // Make sure this is actually a version string
         for (int i = 0; i < iVersionArray.length; i++) {
             try {
                 // Ensure there's padding
-                sVersionArray[i] =  String.format("%3s", sVersionArray[i]).replace(' ', '0');
+                sVersionArray[i] = String.format("%3s", sVersionArray[i]).replace(' ', '0');
                 // Grab only the last 3, MCJE 999.999.999 isnt coming soon anyway
                 sVersionArray[i] = sVersionArray[i].substring(sVersionArray[i].length() - 3);
-            } catch (ArrayIndexOutOfBoundsException ignored){
-                // If we don't get 3 a third array, pad with 0s because it's probably 1.21 or something
+            } catch (ArrayIndexOutOfBoundsException ignored) {
+                // If we don't get 3 a third array, pad with 0s because it's probably 1.21 or
+                // something
                 iVersionArray[i] = "000";
                 continue;
             }
@@ -1915,7 +2075,8 @@ public final class Tools {
         int[] deviceIds = InputDevice.getDeviceIds();
         for (int id : deviceIds) {
             InputDevice device = InputDevice.getDevice(id);
-            if (device == null) continue;
+            if (device == null)
+                continue;
             int sources = device.getSources();
             if ((sources & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE
                     || (sources & InputDevice.SOURCE_TOUCHPAD) == InputDevice.SOURCE_TOUCHPAD
@@ -1926,7 +2087,8 @@ public final class Tools {
         return false;
     }
 
-    public static Object runMethodbyReflection(String className, String methodName) throws ReflectiveOperationException{
+    public static Object runMethodbyReflection(String className, String methodName)
+            throws ReflectiveOperationException {
         Class<?> clazz = Class.forName(className);
         Method method = clazz.getDeclaredMethod(methodName);
         method.setAccessible(true);
@@ -1938,11 +2100,14 @@ public final class Tools {
     public static class SDL {
         /**
          * Initializes gamepad, joystick, and event subsystems.
-         * This triggers {@link SDLControllerManager#pollInputDevices()} and subsequently disables
+         * This triggers {@link SDLControllerManager#pollInputDevices()} and
+         * subsequently disables
          * the emulated gamepad implementation.
          */
         public static native void initializeControllerSubsystems();
     }
+
     public static native String jObjectToString(Object object);
+
     public static native long getJavaVMPointer();
 }

@@ -1,10 +1,9 @@
-# Remove Angel Aura Amethyst account data
-Angel Aura Amethyst uses two types of accounts:
-- Local accounts
+# Remove Micro Client Launcher Android account data
+Micro Client Launcher Android uses one type of account:
 - Microsoft accounts
 <br>
 
-If you wish to remove a local account or a Microsoft account from the launcher:<br>
+If you wish to remove a Microsoft account from the launcher:<br>
 1. Select the account that you wish to remove in the account selector
 2. Press the trash bin button
 3. All account data stored in the launcher will be removed immediately.

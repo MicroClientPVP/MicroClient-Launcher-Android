@@ -86,7 +86,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
-public class MainActivity extends BaseActivity implements ControlButtonMenuListener, EditorExitable, ServiceConnection, TouchControllerInputView.InputAreaRectListener {
+public class MainActivity extends BaseActivity implements ControlButtonMenuListener, EditorExitable, ServiceConnection,
+        TouchControllerInputView.InputAreaRectListener {
     public static volatile ClipboardManager GLOBAL_CLIPBOARD;
     public static final String TAG = "MainActivity";
     public static final String INTENT_MINECRAFT_VERSION = "intent_version";
@@ -142,30 +143,46 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             TouchControllerUtils.initialize(this, touchControllerInputView);
         }
         if (LauncherPreferences.PREF_GAMEPAD_FORCEDSDL_PASSTHRU) {
-            CallbackBridge.notifyLauncher(CallbackBridge.NOTIF_TYPE_SDL, CallbackBridge.ACTION_INIT_LAUNCHER_INTEGRATION);
+            CallbackBridge.notifyLauncher(CallbackBridge.NOTIF_TYPE_SDL,
+                    CallbackBridge.ACTION_INIT_LAUNCHER_INTEGRATION);
         }
 
         mGyroControl = new GyroControl(this);
 
         // Enabling this on TextureView results in a broken white result
-        if(PREF_USE_ALTERNATE_SURFACE) getWindow().setBackgroundDrawable(null);
-        else getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
+        if (PREF_USE_ALTERNATE_SURFACE)
+            getWindow().setBackgroundDrawable(null);
+        else
+            getWindow().setBackgroundDrawable(new ColorDrawable(Color.BLACK));
 
         // Set the sustained performance mode for available APIs
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
             getWindow().setSustainedPerformanceMode(PREF_SUSTAINED_PERFORMANCE);
 
         ingameControlsEditorArrayAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.menu_customcontrol));
         ingameControlsEditorListener = (parent, view, position, id) -> {
-            switch(position) {
-                case 0: mControlLayout.addControlButton(new ControlData("New")); break;
-                case 1: mControlLayout.addDrawer(new ControlDrawerData()); break;
-                case 2: mControlLayout.addJoystickButton(new ControlJoystickData()); break;
-                case 3: mControlLayout.openLoadDialog(); break;
-                case 4: mControlLayout.openSaveDialog(this); break;
-                case 5: mControlLayout.openSetDefaultDialog(); break;
-                case 6: mControlLayout.openExitDialog(this);
+            switch (position) {
+                case 0:
+                    mControlLayout.addControlButton(new ControlData("New"));
+                    break;
+                case 1:
+                    mControlLayout.addDrawer(new ControlDrawerData());
+                    break;
+                case 2:
+                    mControlLayout.addJoystickButton(new ControlJoystickData());
+                    break;
+                case 3:
+                    mControlLayout.openLoadDialog();
+                    break;
+                case 4:
+                    mControlLayout.openSaveDialog(this);
+                    break;
+                case 5:
+                    mControlLayout.openSetDefaultDialog();
+                    break;
+                case 6:
+                    mControlLayout.openExitDialog(this);
             }
         };
 
@@ -175,29 +192,31 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         mControlLayout.setModifiable(false);
 
         // Listen to IME insets animation
-        ViewCompat.setWindowInsetsAnimationCallback(contentFrame, new WindowInsetsAnimationCompat.Callback(WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP) {
-            @Override
-            public void onPrepare(@NonNull WindowInsetsAnimationCompat animation) {
-                if ((animation.getTypeMask() & WindowInsetsCompat.Type.ime()) != 0) {
-                    hasOngoingImeAnimation = true;
-                }
-            }
+        ViewCompat.setWindowInsetsAnimationCallback(contentFrame,
+                new WindowInsetsAnimationCompat.Callback(WindowInsetsAnimationCompat.Callback.DISPATCH_MODE_STOP) {
+                    @Override
+                    public void onPrepare(@NonNull WindowInsetsAnimationCompat animation) {
+                        if ((animation.getTypeMask() & WindowInsetsCompat.Type.ime()) != 0) {
+                            hasOngoingImeAnimation = true;
+                        }
+                    }
 
-            @NonNull
-            @Override
-            public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets, @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
-                imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
-                refreshImeTranslation();
-                return insets;
-            }
+                    @NonNull
+                    @Override
+                    public WindowInsetsCompat onProgress(@NonNull WindowInsetsCompat insets,
+                            @NonNull List<WindowInsetsAnimationCompat> runningAnimations) {
+                        imeHeight = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom;
+                        refreshImeTranslation();
+                        return insets;
+                    }
 
-            @Override
-            public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
-                if ((animation.getTypeMask() & WindowInsetsCompat.Type.ime()) != 0) {
-                    hasOngoingImeAnimation = false;
-                }
-            }
-        });
+                    @Override
+                    public void onEnd(@NonNull WindowInsetsAnimationCompat animation) {
+                        if ((animation.getTypeMask() & WindowInsetsCompat.Type.ime()) != 0) {
+                            hasOngoingImeAnimation = false;
+                        }
+                    }
+                });
         ViewCompat.setOnApplyWindowInsetsListener(contentFrame, (v, insets) -> {
             // Only refresh translation if IME change insets itself, not the animation
             if (!hasOngoingImeAnimation) {
@@ -207,10 +226,12 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             return insets;
         });
 
-        // Set the activity for the executor. Must do this here, or else Tools.showErrorRemote() may not
+        // Set the activity for the executor. Must do this here, or else
+        // Tools.showErrorRemote() may not
         // execute the correct method
         ContextExecutor.setActivity(this);
-        //Now, attach to the service. The game will only start when this happens, to make sure that we know the right state.
+        // Now, attach to the service. The game will only start when this happens, to
+        // make sure that we know the right state.
         bindService(gameServiceIntent, this, 0);
     }
 
@@ -224,7 +245,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
         try {
             File latestLogFile = new File(Tools.DIR_GAME_HOME, "latestlog.txt");
-            if(!latestLogFile.exists() && !latestLogFile.createNewFile())
+            if (!latestLogFile.exists() && !latestLogFile.createNewFile())
                 throw new IOException("Failed to create a new log file");
             Logger.begin(latestLogFile.getAbsolutePath());
             // FIXME: is it safe for multi thread?
@@ -233,12 +254,13 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
             touchControllerInputView.setInputAreaRectListener(this);
 
-            if(minecraftProfile.pojavRendererName != null) {
-                Log.i("RdrDebug","__P_renderer="+minecraftProfile.pojavRendererName);
+            if (minecraftProfile.pojavRendererName != null) {
+                Log.i("RdrDebug", "__P_renderer=" + minecraftProfile.pojavRendererName);
                 Tools.LOCAL_RENDERER = minecraftProfile.pojavRendererName;
                 // TODO: Remove this jank when it's not relevant anymore
                 // Shitty hack to make OSMZink smoothly transition into kopper
-                if (minecraftProfile.pojavRendererName.equals("vulkan_zink")) Tools.LOCAL_RENDERER = "opengles3_desktopgl_zink_kopper";
+                if (minecraftProfile.pojavRendererName.equals("vulkan_zink"))
+                    Tools.LOCAL_RENDERER = "opengles3_desktopgl_zink_kopper";
             }
 
             setTitle("Minecraft " + minecraftProfile.lastVersionId);
@@ -256,17 +278,26 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             windowWidth = Tools.getDisplayFriendlyRes(currentDisplayMetrics.widthPixels, 1f);
             windowHeight = Tools.getDisplayFriendlyRes(currentDisplayMetrics.heightPixels, 1f);
 
-
             // Menu
             gameActionArrayAdapter = new ArrayAdapter<>(this,
                     android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.menu_ingame));
             gameActionClickListener = (parent, view, position, id) -> {
-                switch(position) {
-                    case 0: dialogForceClose(MainActivity.this); break;
-                    case 1: openLogOutput(); break;
-                    case 2: dialogSendCustomKey(); break;
-                    case 3: openQuickSettings(); break;
-                    case 4: openCustomControls(); break;
+                switch (position) {
+                    case 0:
+                        dialogForceClose(MainActivity.this);
+                        break;
+                    case 1:
+                        openLogOutput();
+                        break;
+                    case 2:
+                        dialogSendCustomKey();
+                        break;
+                    case 3:
+                        openQuickSettings();
+                        break;
+                    case 4:
+                        openCustomControls();
+                        break;
                 }
                 drawerLayout.closeDrawers();
             };
@@ -286,7 +317,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                     touchControllerInputView.setSize(minecraftGLView.getWidth(), minecraftGLView.getHeight());
 
                     runCraft(finalVersion, mVersionInfo);
-                }catch (Throwable e){
+                } catch (Throwable e) {
                     Tools.showErrorRemote(e);
                 }
             });
@@ -302,7 +333,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                     minecraftProfile.controlFile == null
                             ? LauncherPreferences.PREF_DEFAULTCTRL_PATH
                             : Tools.CTRLMAP_PATH + "/" + minecraftProfile.controlFile);
-        } catch(IOException e) {
+        } catch (IOException e) {
             try {
                 Log.w("MainActivity", "Unable to load the control file, loading the default now", e);
                 mControlLayout.loadLayout(Tools.CTRLDEF_FILE);
@@ -320,14 +351,14 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     public void onAttachedToWindow() {
         // Post to get the correct display dimensions after layout.
         LauncherPreferences.computeNotchSize(this);
-        mControlLayout.post(()->{
+        mControlLayout.post(() -> {
             Tools.getDisplayMetrics(this);
             loadControls();
         });
     }
 
     /** Boilerplate binding */
-    private void bindValues(){
+    private void bindValues() {
         mControlLayout = findViewById(R.id.main_control_layout);
         minecraftGLView = findViewById(R.id.main_game_render_view);
         touchpad = findViewById(R.id.main_touchpad);
@@ -345,7 +376,8 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     public void onResume() {
         super.onResume();
-        if(PREF_ENABLE_GYRO) mGyroControl.enable();
+        if (PREF_ENABLE_GYRO)
+            mGyroControl.enable();
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_FOCUSED, 1);
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_HOVERED, 1);
     }
@@ -353,10 +385,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     protected void onPause() {
         mGyroControl.disable();
-        if (CallbackBridge.isGrabbing()){
+        if (CallbackBridge.isGrabbing()) {
             sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ESCAPE);
         }
-        if(mQuickSettingSideDialog != null) {
+        if (mQuickSettingSideDialog != null) {
             mQuickSettingSideDialog.cancel();
         }
         CallbackBridge.nativeSetWindowAttrib(LwjglGlfwKeycode.GLFW_FOCUSED, 0);
@@ -388,12 +420,15 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        if(mGyroControl != null) mGyroControl.updateOrientation();
-        // Layout resize is practically guaranteed on a configuration change, and `onConfigurationChanged`
-        // does not implicitly start a layout. So, request a layout and expect the screen dimensions to be valid after the]
+        if (mGyroControl != null)
+            mGyroControl.updateOrientation();
+        // Layout resize is practically guaranteed on a configuration change, and
+        // `onConfigurationChanged`
+        // does not implicitly start a layout. So, request a layout and expect the
+        // screen dimensions to be valid after the]
         // post.
         mControlLayout.requestLayout();
-        mControlLayout.post(()->{
+        mControlLayout.post(() -> {
             // Child of mControlLayout, so refreshing size here is correct
             Tools.setFullscreen(this, setFullscreen());
             minecraftGLView.refreshSize();
@@ -406,7 +441,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     protected void onPostResume() {
         super.onPostResume();
-        if(minecraftGLView != null)  // Useful when backing out of the app
+        if (minecraftGLView != null) // Useful when backing out of the app
             Tools.MAIN_HANDLER.postDelayed(() -> minecraftGLView.refreshSize(), 500);
     }
 
@@ -416,9 +451,11 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
         if (requestCode == 1 && resultCode == Activity.RESULT_OK) {
             // Reload PREF_DEFAULTCTRL_PATH
-            // If the storage root got unmounted/unreadable we won't be able to load the file anyway,
+            // If the storage root got unmounted/unreadable we won't be able to load the
+            // file anyway,
             // and MissingStorageActivity will be started.
-            if(!Tools.checkStorageRoot(this)) return;
+            if (!Tools.checkStorageRoot(this))
+                return;
             LauncherPreferences.loadPreferences(getApplicationContext());
             try {
                 mControlLayout.loadLayout(LauncherPreferences.PREF_DEFAULTCTRL_PATH);
@@ -432,11 +469,14 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         String assetVersion;
         try {
             if (version.inheritsFrom != null) { // We are almost definitely modded if this runs
-                File vanillaJsonFile = new File(Tools.DIR_HOME_VERSION + "/" + version.inheritsFrom + "/" + version.inheritsFrom + ".json");
+                File vanillaJsonFile = new File(
+                        Tools.DIR_HOME_VERSION + "/" + version.inheritsFrom + "/" + version.inheritsFrom + ".json");
                 JMinecraftVersionList.Version vanillaJson;
                 try { // Get the vanilla json from modded instance
-                    vanillaJson = Tools.GLOBAL_GSON.fromJson(Tools.read(vanillaJsonFile.getAbsolutePath()), JMinecraftVersionList.Version.class);
-                } catch (IOException ignored) { // Should never happen, we check for this in MinecraftDownloader().start()
+                    vanillaJson = Tools.GLOBAL_GSON.fromJson(Tools.read(vanillaJsonFile.getAbsolutePath()),
+                            JMinecraftVersionList.Version.class);
+                } catch (IOException ignored) { // Should never happen, we check for this in
+                                                // MinecraftDownloader().start()
                     throw new RuntimeException(getString(R.string.error_vanilla_json_corrupt));
                 }
                 // Something went wrong if this is somehow not the case anymore
@@ -449,75 +489,94 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                     Tools.showErrorRemote(new RuntimeException(getString(R.string.error_vanilla_json_corrupt)));
                 assetVersion = version.assets;
             }
-       } catch (RuntimeException ignored){
+        } catch (RuntimeException ignored) {
             assetVersion = "legacy";
-       } // If this fails.. oh well.
+        } // If this fails.. oh well.
 
-        // FIXME: Automatic detection should be based on provided hint GLFW_CONTEXT_VERSION_MAJOR and GLFW_CONTEXT_VERSION_MINOR
+        // FIXME: Automatic detection should be based on provided hint
+        // GLFW_CONTEXT_VERSION_MAJOR and GLFW_CONTEXT_VERSION_MINOR
         // Autoselect renderer
         if (Tools.LOCAL_RENDERER == null) {
-            // Preferably we could detect when it is modded and swap to zink however that would also
-            // cover optifine and vanilla+ configurations which are relatively common, degrading their
-            // experience for no reason. We will compromise with just having users do it themselves.
+            // Preferably we could detect when it is modded and swap to zink however that
+            // would also
+            // cover optifine and vanilla+ configurations which are relatively common,
+            // degrading their
+            // experience for no reason. We will compromise with just having users do it
+            // themselves.
             Tools.LOCAL_RENDERER = "opengles2";
-            // MobileGlues becomes available post 1.17. It has superior compatibility with mods
+            // MobileGlues becomes available post 1.17. It has superior compatibility with
+            // mods
             // while having fairly similar performance compared to GL4ES-based forks.
-            if(assetVersion.matches("\\d+") || // Should match all digits, which is the modern assetVersioning
-               "1.17".equals(assetVersion) ||
-               "1.18".equals(assetVersion) ||
-               "1.19".equals(assetVersion) ||
-                // Angelica gives us GL3.3core on 1.7.10, it's a unique case.
-                hasMods("angelica")) Tools.LOCAL_RENDERER = "opengles_mobileglues";
+            if (assetVersion.matches("\\d+") || // Should match all digits, which is the modern assetVersioning
+                    "1.17".equals(assetVersion) ||
+                    "1.18".equals(assetVersion) ||
+                    "1.19".equals(assetVersion) ||
+                    // Angelica gives us GL3.3core on 1.7.10, it's a unique case.
+                    hasMods("angelica"))
+                Tools.LOCAL_RENDERER = "opengles_mobileglues";
         }
-        if(!Tools.checkRendererCompatible(this, Tools.LOCAL_RENDERER)) {
+        if (!Tools.checkRendererCompatible(this, Tools.LOCAL_RENDERER)) {
             Tools.RenderersList renderersList = Tools.getCompatibleRenderers(this);
             String firstCompatibleRenderer = renderersList.rendererIds.get(0);
-            Log.w("runCraft","Incompatible renderer "+Tools.LOCAL_RENDERER+ " will be replaced with "+firstCompatibleRenderer);
+            Log.w("runCraft", "Incompatible renderer " + Tools.LOCAL_RENDERER + " will be replaced with "
+                    + firstCompatibleRenderer);
             Tools.LOCAL_RENDERER = firstCompatibleRenderer;
             runOnUiThread(() -> Toast.makeText(this, R.string.autorendererselectfailed, Toast.LENGTH_LONG).show());
             Tools.releaseRenderersCache();
         }
 
         // MCL-3732 Mitigation
-        // I don't trust the bug tracker. 'server-resource-pack" was removed in 1.20.3-pre3
-        // so we use 12 to detect that. We still generate till 1.20.5 else we don't cover
+        // I don't trust the bug tracker. 'server-resource-pack" was removed in
+        // 1.20.3-pre3
+        // so we use 12 to detect that. We still generate till 1.20.5 else we don't
+        // cover
         // 1.20.3-pre2 and such. Better to over than to under.
         File folder = new File(Tools.getGameDirPath(minecraftProfile), "server-resource-pack");
         try {
-            if (Integer.parseInt(assetVersion) <= 12) folder.mkdir();
-        } catch (NumberFormatException e) { folder.mkdir(); }
+            if (Integer.parseInt(assetVersion) <= 12)
+                folder.mkdir();
+        } catch (NumberFormatException e) {
+            folder.mkdir();
+        }
 
         MinecraftAccount minecraftAccount = PojavProfile.getCurrentProfileContent(this, null);
         if (hasMods("sodium"))
-            Logger.appendToLog("WARNING: Sodium is being used, Amethyst-Android does NOT support this mod, you are on your own");
+            Logger.appendToLog(
+                    "WARNING: Sodium is being used, Micro Client Launcher Android does NOT support this mod, you are on your own");
         Logger.appendToLog("--------- Starting game with Launcher Debug!");
-        Tools.printLauncherInfo(versionId, Tools.isValidString(minecraftProfile.javaArgs) ? minecraftProfile.javaArgs : LauncherPreferences.PREF_CUSTOM_JAVA_ARGS, Tools.getTotalDeviceMemory(this));
-        if(Tools.LOCAL_RENDERER.equals("opengles_mobileglues")) {
+        Tools.printLauncherInfo(versionId, Tools.isValidString(minecraftProfile.javaArgs) ? minecraftProfile.javaArgs
+                : LauncherPreferences.PREF_CUSTOM_JAVA_ARGS, Tools.getTotalDeviceMemory(this));
+        if (Tools.LOCAL_RENDERER.equals("opengles_mobileglues")) {
             LauncherPreferences.writeMGRendererSettings();
         }
         JREUtils.redirectAndPrintJRELog();
         LauncherProfiles.load();
         int requiredJavaVersion = 8;
-        if(version.javaVersion != null) requiredJavaVersion = version.javaVersion.majorVersion;
+        if (version.javaVersion != null)
+            requiredJavaVersion = version.javaVersion.majorVersion;
         Tools.launchMinecraft(this, minecraftAccount, minecraftProfile, versionId, requiredJavaVersion);
-        //Note that we actually stall in the above function, even if the game crashes. But let's be safe.
-        Tools.runOnUiThread(()-> mServiceBinder.isActive = false);
+        // Note that we actually stall in the above function, even if the game crashes.
+        // But let's be safe.
+        Tools.runOnUiThread(() -> mServiceBinder.isActive = false);
     }
 
-    public void setmLastIndex(int a){
+    public void setmLastIndex(int a) {
         mHotbarView.setmLastIndex(a);
     }
 
     private void dialogSendCustomKey() {
         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
         dialog.setTitle(R.string.control_customkey);
-        dialog.setItems(EfficientAndroidLWJGLKeycode.generateKeyName(), (dInterface, position) -> EfficientAndroidLWJGLKeycode.execKeyIndex(position));
+        dialog.setItems(EfficientAndroidLWJGLKeycode.generateKeyName(),
+                (dInterface, position) -> EfficientAndroidLWJGLKeycode.execKeyIndex(position));
         dialog.show();
     }
 
     boolean isInEditor;
+
     private void openCustomControls() {
-        if(ingameControlsEditorListener == null || ingameControlsEditorArrayAdapter == null) return;
+        if (ingameControlsEditorListener == null || ingameControlsEditorArrayAdapter == null)
+            return;
 
         mControlLayout.setModifiable(true);
         navDrawer.setAdapter(ingameControlsEditorArrayAdapter);
@@ -531,7 +590,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     private void openQuickSettings() {
-        if(mQuickSettingSideDialog == null) {
+        if (mQuickSettingSideDialog == null) {
             mQuickSettingSideDialog = new QuickSettingSideDialog(this, mControlLayout) {
                 @Override
                 public void onResolutionChanged() {
@@ -554,26 +613,30 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     public static void toggleMouse(Context ctx) {
-        if (CallbackBridge.isGrabbing()) return;
+        if (CallbackBridge.isGrabbing())
+            return;
 
         Toast.makeText(ctx, touchpad.switchState()
-                        ? R.string.control_mouseon : R.string.control_mouseoff,
+                ? R.string.control_mouseon
+                : R.string.control_mouseoff,
                 Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
-        if(isInEditor) {
-            if(event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
-                if(event.getAction() == KeyEvent.ACTION_DOWN) mControlLayout.askToExit(this);
+        if (isInEditor) {
+            if (event.getKeyCode() == KeyEvent.KEYCODE_BACK) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN)
+                    mControlLayout.askToExit(this);
                 return true;
             }
             return super.dispatchKeyEvent(event);
         }
         boolean handleEvent;
-        if(!(handleEvent = minecraftGLView.processKeyEvent(event))) {
+        if (!(handleEvent = minecraftGLView.processKeyEvent(event))) {
             if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && !touchCharInput.isEnabled()) {
-                if(event.getAction() != KeyEvent.ACTION_UP) return true; // We eat it anyway
+                if (event.getAction() != KeyEvent.ACTION_UP)
+                    return true; // We eat it anyway
                 sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ESCAPE);
                 return true;
             }
@@ -582,20 +645,22 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     public static void switchKeyboardState() {
-        if(touchCharInput != null) touchCharInput.switchKeyboardState();
+        if (touchCharInput != null)
+            touchCharInput.switchKeyboardState();
     }
 
     @Keep
     public static void openLink(String link) {
         Context ctx = touchpad.getContext(); // no more better way to obtain a context statically
-        ((Activity)ctx).runOnUiThread(() -> {
+        ((Activity) ctx).runOnUiThread(() -> {
             try {
-                if(link.startsWith("file:")) {
+                if (link.startsWith("file:")) {
                     int truncLength = 5;
-                    if(link.startsWith("file://")) truncLength = 7;
+                    if (link.startsWith("file://"))
+                        truncLength = 7;
                     String path = link.substring(truncLength);
                     Tools.openPath(ctx, new File(path), false);
-                }else {
+                } else {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
                     intent.setDataAndType(Uri.parse(link), "*/*");
                     ctx.startActivity(intent);
@@ -606,10 +671,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         });
     }
 
-    @SuppressWarnings("unused") //TODO: actually use it
+    @SuppressWarnings("unused") // TODO: actually use it
     public static void openPath(String path) {
         Context ctx = touchpad.getContext(); // no more better way to obtain a context statically
-        ((Activity)ctx).runOnUiThread(() -> {
+        ((Activity) ctx).runOnUiThread(() -> {
             try {
                 Tools.openPath(ctx, new File(path), false);
             } catch (Throwable th) {
@@ -620,16 +685,16 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Keep
     public static void querySystemClipboard() {
-        Tools.runOnUiThread(()->{
+        Tools.runOnUiThread(() -> {
             ClipData clipData = GLOBAL_CLIPBOARD.getPrimaryClip();
-            if(clipData == null) {
+            if (clipData == null) {
                 AWTInputBridge.nativeClipboardReceived(null, null);
                 return;
             }
             ClipData.Item firstClipItem = clipData.getItemAt(0);
-            //TODO: coerce to HTML if the clip item is styled
+            // TODO: coerce to HTML if the clip item is styled
             CharSequence clipItemText = firstClipItem.getText();
-            if(clipItemText == null) {
+            if (clipItemText == null) {
                 AWTInputBridge.nativeClipboardReceived(null, null);
                 return;
             }
@@ -639,16 +704,17 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Keep
     public static void putClipboardData(String data, String mimeType) {
-        Tools.runOnUiThread(()-> {
+        Tools.runOnUiThread(() -> {
             ClipData clipData = null;
-            switch(mimeType) {
+            switch (mimeType) {
                 case "text/plain":
                     clipData = ClipData.newPlainText("AWT Paste", data);
                     break;
                 case "text/html":
                     clipData = ClipData.newHtmlText("AWT Paste", data, data);
             }
-            if(clipData != null) GLOBAL_CLIPBOARD.setPrimaryClip(clipData);
+            if (clipData != null)
+                GLOBAL_CLIPBOARD.setPrimaryClip(clipData);
         });
     }
 
@@ -661,7 +727,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     public void exitEditor() {
         try {
-            mControlLayout.loadLayout((CustomControls)null);
+            mControlLayout.loadLayout((CustomControls) null);
             mControlLayout.setModifiable(false);
             System.gc();
             mControlLayout.loadLayout(
@@ -670,7 +736,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                             : Tools.CTRLMAP_PATH + "/" + minecraftProfile.controlFile);
             mDrawerPullButton.setVisibility(mControlLayout.hasMenuButton() ? View.GONE : View.VISIBLE);
         } catch (IOException e) {
-            Tools.showError(this,e);
+            Tools.showError(this, e);
         }
 
         navDrawer.setAdapter(gameActionArrayAdapter);
@@ -692,15 +758,18 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     /*
-     * Android 14 (or some devices, at least) seems to dispatch the the captured mouse events as trackball events
+     * Android 14 (or some devices, at least) seems to dispatch the the captured
+     * mouse events as trackball events
      * due to a bug(?) somewhere(????)
      */
     @RequiresApi(api = Build.VERSION_CODES.O)
     private boolean checkCaptureDispatchConditions(MotionEvent event) {
         int eventSource = event.getSource();
         // On my device, the mouse sends events as a relative mouse device.
-        // Not comparing with == here because apparently `eventSource` is a mask that can
-        // sometimes indicate multiple sources, like in the case of InputDevice.SOURCE_TOUCHPAD
+        // Not comparing with == here because apparently `eventSource` is a mask that
+        // can
+        // sometimes indicate multiple sources, like in the case of
+        // InputDevice.SOURCE_TOUCHPAD
         // (which is *also* an InputDevice.SOURCE_MOUSE when controlling a cursor)
         return (eventSource & InputDevice.SOURCE_MOUSE_RELATIVE) != 0 ||
                 (eventSource & InputDevice.SOURCE_MOUSE) != 0;
@@ -708,9 +777,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     public boolean dispatchTrackballEvent(MotionEvent ev) {
-        if(Tools.isAndroid8OrHigher() && checkCaptureDispatchConditions(ev))
+        if (Tools.isAndroid8OrHigher() && checkCaptureDispatchConditions(ev))
             return minecraftGLView.dispatchCapturedPointerEvent(ev);
-        else return super.dispatchTrackballEvent(ev);
+        else
+            return super.dispatchTrackballEvent(ev);
     }
 
     @Override
