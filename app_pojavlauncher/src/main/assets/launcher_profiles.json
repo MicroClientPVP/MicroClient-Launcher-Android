@@ -1,9 +1,13 @@
 {
   "profiles": {
-    "MicroClient": {
-      "name": "MicroClient",
-      "lastVersionId": "MicroClient"
+    "MicroClientMixin": {
+      "name": "MicroClientMixin",
+      "lastVersionId": "MicroClientMixin"
+    },
+    "MicroClientMixinBeta": {
+      "name": "MicroClientMixinBeta",
+      "lastVersionId": "MicroClientMixinBeta"
     }
   },
-  "selectedProfile": "MicroClient"
+  "selectedProfile": "MicroClientMixinBeta"
 }

@@ -6,7 +6,7 @@ import androidx.annotation.Keep;
 public class MinecraftProfile {
 
 	public static String LATEST_RELEASE = "latest-release";
-	public static String LATEST_SNAPSHOT= "latest-snapshot";
+	public static String LATEST_SNAPSHOT = "latest-snapshot";
 
 	public String name;
 	public String type;
@@ -23,24 +23,31 @@ public class MinecraftProfile {
 	public String controlFile;
 	public MinecraftResolution[] resolution;
 
-
-	public static MinecraftProfile createTemplate(){
+	public static MinecraftProfile createTemplate() {
 		MinecraftProfile TEMPLATE = new MinecraftProfile();
 		TEMPLATE.name = "";
 		TEMPLATE.lastVersionId = LATEST_RELEASE;
 		return TEMPLATE;
 	}
 
-	public static MinecraftProfile getDefaultProfile(){
+	public static MinecraftProfile getDefaultProfile() {
 		MinecraftProfile defaultProfile = new MinecraftProfile();
-		defaultProfile.name = "MicroClient";
-		defaultProfile.lastVersionId = "MicroClient";
+		defaultProfile.name = "MicroClientMixinBeta";
+		defaultProfile.lastVersionId = "MicroClientMixinBeta";
 		return defaultProfile;
 	}
 
-	public MinecraftProfile(){}
+	public static MinecraftProfile getStableProfile() {
+		MinecraftProfile stableProfile = new MinecraftProfile();
+		stableProfile.name = "MicroClientMixinStable";
+		stableProfile.lastVersionId = "MicroClientMixinStable";
+		return stableProfile;
+	}
 
-	public MinecraftProfile(MinecraftProfile profile){
+	public MinecraftProfile() {
+	}
+
+	public MinecraftProfile(MinecraftProfile profile) {
 		name = profile.name;
 		type = profile.type;
 		created = profile.created;

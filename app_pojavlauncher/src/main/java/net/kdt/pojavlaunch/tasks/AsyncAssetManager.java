@@ -90,6 +90,8 @@ public class AsyncAssetManager {
                 }
 
                 Tools.copyAssetFile(ctx, "launcher_profiles.json", Tools.DIR_GAME_NEW, true);
+                Tools.copyAssetFile(ctx, "MicroClientMixinStable.json",
+                        Tools.DIR_GAME_NEW + "/versions/MicroClientMixinStable", true);
                 Tools.copyAssetFile(ctx, "MicroClientMixinBeta.json",
                         Tools.DIR_GAME_NEW + "/versions/MicroClientMixinBeta", true);
                 Tools.copyAssetFile(ctx, "resolv.conf", Tools.DIR_DATA, false);

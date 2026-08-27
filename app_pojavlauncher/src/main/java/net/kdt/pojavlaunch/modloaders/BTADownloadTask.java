@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public class BTADownloadTask implements Runnable {
-    private static final String BASE_JSON = "{\"inheritsFrom\":\"b1.7.3\",\"mainClass\":\"net.minecraft.client.Minecraft\",\"libraries\":[{\"name\":\"bta-client:bta-client:%1$s\",\"downloads\":{\"artifact\":{\"path\":\"bta-client/bta-client-%1$s.jar\",\"url\":\"%2$s\"}}}],\"id\":\"%3$s\"}";
+    private static final String BASE_JSON = "{\"inheritsFrom\":\"b1.7.3\",\"mainClass\":\"net.minecraft.launchwrapper.Launch\",\"libraries\":[{\"name\":\"bta-client:bta-client:%1$s\",\"downloads\":{\"artifact\":{\"path\":\"bta-client/bta-client-%1$s.jar\",\"url\":\"%2$s\"}}}],\"id\":\"%3$s\"}";
     private final ModloaderDownloadListener mListener;
     private final BTAUtils.BTAVersion mBtaVersion;
 
@@ -33,9 +33,9 @@ public class BTADownloadTask implements Runnable {
     public void run() {
         ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.fabric_dl_progress, "BTA");
         try {
-            runCatching() ;
+            runCatching();
             mListener.onDownloadFinished(null);
-        }catch (IOException e) {
+        } catch (IOException e) {
             mListener.onDownloadError(e);
         }
         ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
@@ -43,15 +43,16 @@ public class BTADownloadTask implements Runnable {
 
     private String tryDownloadIcon() {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        try (Base64OutputStream base64OutputStream = new Base64OutputStream(byteArrayOutputStream, Base64.DEFAULT)){
-            // Instead of appending and wasting memory with a StringBuilder, just write the prefix
+        try (Base64OutputStream base64OutputStream = new Base64OutputStream(byteArrayOutputStream, Base64.DEFAULT)) {
+            // Instead of appending and wasting memory with a StringBuilder, just write the
+            // prefix
             // to the stream before the base64 icon data.
             byteArrayOutputStream.write("data:image/png;base64,".getBytes(StandardCharsets.US_ASCII));
             DownloadUtils.download(mBtaVersion.iconUrl, base64OutputStream);
             return new String(byteArrayOutputStream.toByteArray(), StandardCharsets.US_ASCII);
-        }catch (IOException e) {
+        } catch (IOException e) {
             Log.w("BTADownloadTask", "Failed to download base64 icon", e);
-        }finally {
+        } finally {
             try {
                 byteArrayOutputStream.close();
             } catch (IOException e) {
@@ -64,17 +65,20 @@ public class BTADownloadTask implements Runnable {
     private void createJson(String btaVersionId) throws IOException {
         String btaJson = String.format(BASE_JSON, mBtaVersion.versionName, mBtaVersion.downloadUrl, btaVersionId);
         File jsonDir = new File(Tools.DIR_HOME_VERSION, btaVersionId);
-        File jsonFile = new File(jsonDir, btaVersionId+".json");
+        File jsonFile = new File(jsonDir, btaVersionId + ".json");
         FileUtils.ensureDirectory(jsonDir);
         Tools.write(jsonFile.getAbsolutePath(), btaJson);
     }
 
-    // BTA doesn't have SHA1 checksums in its repositories, so the user may try to reinstall it
-    // if it didn't work due to a broken download. So, for reinstalls like that to work,
+    // BTA doesn't have SHA1 checksums in its repositories, so the user may try to
+    // reinstall it
+    // if it didn't work due to a broken download. So, for reinstalls like that to
+    // work,
     // we need to delete the old client jar to force the download of a new one.
-    private void removeOldClient() throws IOException{
-        File btaClientPath = new File(Tools.DIR_HOME_LIBRARY, String.format("bta-client/bta-client-%1$s.jar", mBtaVersion.versionName));
-        if(btaClientPath.exists() && !btaClientPath.delete())
+    private void removeOldClient() throws IOException {
+        File btaClientPath = new File(Tools.DIR_HOME_LIBRARY,
+                String.format("bta-client/bta-client-%1$s.jar", mBtaVersion.versionName));
+        if (btaClientPath.exists() && !btaClientPath.delete())
             throw new IOException("Failed to delete old client jar");
     }
 
@@ -92,7 +96,7 @@ public class BTADownloadTask implements Runnable {
 
     public void runCatching() throws IOException {
         removeOldClient();
-        String btaVersionId = "bta-"+mBtaVersion.versionName;
+        String btaVersionId = "bta-" + mBtaVersion.versionName;
         createJson(btaVersionId);
         createProfile(btaVersionId);
     }

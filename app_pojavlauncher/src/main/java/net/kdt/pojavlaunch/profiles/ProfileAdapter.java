@@ -106,10 +106,10 @@ public class ProfileAdapter extends BaseAdapter {
             versionName = v.getContext().getString(R.string.profiles_latest_snapshot);
 
         if (versionName == null && profileName != null)
-            extendedTextView.setText(profileName);
+            extendedTextView.setText("Profile: " + profileName);
         else if (versionName != null && profileName == null)
-            extendedTextView.setText(versionName);
-        else extendedTextView.setText(String.format("%s - %s", profileName, versionName));
+            extendedTextView.setText("Profile: " + versionName);
+        else extendedTextView.setText(String.format("Profile: %s - %s", profileName, versionName));
 
         // Set selected background if needed
         if(displaySelection){
