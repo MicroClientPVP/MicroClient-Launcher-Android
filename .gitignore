@@ -23,3 +23,7 @@ app_pojavlauncher/.cxx/
 
 # Compiled Java class files
 *.class
+
+# Log files
+*.log
+*.txt
