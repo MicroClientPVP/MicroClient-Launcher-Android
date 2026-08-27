@@ -20,3 +20,6 @@ app_pojavlauncher/.cxx/
 # Logcat files
 *logcat*
 *.logcat
+
+# Compiled Java class files
+*.class
