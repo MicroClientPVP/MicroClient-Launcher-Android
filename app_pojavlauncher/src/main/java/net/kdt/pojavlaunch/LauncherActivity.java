@@ -287,11 +287,16 @@ public class LauncherActivity extends BaseActivity {
             }
         }
 
-        new MinecraftDownloader().start(
-                this,
-                mcVersion,
-                normalizedVersionId,
-                new ContextAwareDoneListener(this, normalizedVersionId));
+        MicroClientUpdater.updateMixin(this, new Runnable() {
+            @Override
+            public void run() {
+                new MinecraftDownloader().start(
+                        LauncherActivity.this,
+                        mcVersion,
+                        normalizedVersionId,
+                        new ContextAwareDoneListener(LauncherActivity.this, normalizedVersionId));
+            }
+        });
         return false;
     };
 
