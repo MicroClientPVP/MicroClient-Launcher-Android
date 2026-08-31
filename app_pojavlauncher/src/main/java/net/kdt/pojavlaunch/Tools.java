@@ -539,6 +539,7 @@ public final class Tools {
         javaArgList.add("-Dimgui.library.name=imgui-java");
         // We use an abomination to support all DH versions with a single library.
         javaArgList.add("-DZstdNativePath=" + Tools.NATIVE_LIB_DIR + "/libzstd-jni-1.5.7-6-dhcompat.so");
+        
         // We only ever reach this point when user has already used the force run switch
         boolean hasSodiumMod = false;
         for (String modName : sodiumMods) {
@@ -581,6 +582,9 @@ public final class Tools {
         String args = LauncherPreferences.PREF_CUSTOM_JAVA_ARGS;
         if (Tools.isValidString(minecraftProfile.javaArgs))
             args = minecraftProfile.javaArgs;
+            
+        if (args == null) args = "";
+        
         FFmpegPlugin.discover(activity);
         JREUtils.launchJavaVM(activity, runtime, gamedir, javaArgList, args);
         // If we returned, this means that the JVM exit dialog has been shown and we
